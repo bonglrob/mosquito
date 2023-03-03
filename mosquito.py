@@ -118,6 +118,8 @@ def clean_up_pop_df():
     print(pop_all)
     # append a list of 1970 based on county
     # do the same for all
+
+    # do county, year, pop, eee, eee columns!
     pass
 
 
