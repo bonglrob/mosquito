@@ -18,6 +18,7 @@ def get_df_m(file_path: str) -> pd.DataFrame:
     """
     # is there any other way "low_memory=False"
     data = pd.read_csv(file_path, delimiter='\t', low_memory=False)
+    # select columns
     data = data.loc[data['countryCode'] == 'US',
                     ['gbifID', 'species', 'countryCode', 'locality',
                      'stateProvince', 'occurrenceStatus', 'individualCount',
@@ -50,7 +51,7 @@ def get_df_p(file_path: str) -> pd.DataFrame:
     return data
 
 
-def write_df() -> pd.DataFrame:
+def city_df() -> pd.DataFrame:
     """
     This function returns a dataframe where all datasets on city tempereature
     and precipitation are combined.
@@ -92,7 +93,7 @@ def main() -> None:
                          'Culex_tarsalis_occurrence.csv'))
     print(mosquito3)
 
-    city_data = write_df()
+    city_data = city_df()
 
     # question 1
 
