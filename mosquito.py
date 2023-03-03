@@ -13,20 +13,25 @@ import matplotlib.pyplot as plt
 
 def get_df_m(file_path: str) -> pd.DataFrame:
     """
-    This function takes a file name (str)
-    and returns the file in dataframe format.
-    This is only for theree mosquito occurence files.
+    This function takes a file name (str) of one of mosquito occurence
+    datasets and returns the dataframe.
     """
     # is there any other way "low_memory=False"
     data = pd.read_csv(file_path, delimiter='\t', low_memory=False)
+    data = data.loc[data['countryCode'] == 'US',
+                    ['gbifID', 'species', 'countryCode', 'locality',
+                     'stateProvince', 'occurrenceStatus', 'individualCount',
+                     'decimalLatitude', 'decimalLongitude', 'elevation',
+                     'elevationAccuracy', 'depth', 'depthAccuracy', 'day',
+                     'month', 'year']
+                    ]
     return data
 
 
 def get_df_t(file_path: str) -> pd.DataFrame:
     """
-    This function takes a file name (str)
-    and returns the file in dataframe format.
-    This is only for temperature datasets.
+    This function takes a file name (str) of one of temperature datasets
+    and returns the dataframe.
     """
     data = pd.read_csv(file_path)
     data.columns = ["Date", "Temp", "Anomaly"]
@@ -36,9 +41,8 @@ def get_df_t(file_path: str) -> pd.DataFrame:
 
 def get_df_p(file_path: str) -> pd.DataFrame:
     """
-    This function takes a file name (str)
+    This function takes a file name (str) of one of precipitation datasets
     and returns the file in dataframe format.
-    This is only for precipitation datasets.
     """
     data = pd.read_csv(file_path)
     data.columns = ["Date", "Prec", "Anomaly"]
@@ -48,8 +52,8 @@ def get_df_p(file_path: str) -> pd.DataFrame:
 
 def write_df() -> pd.DataFrame:
     """
-    This function returns a dataframe where all datasets on
-    city tempereature and precipitation are combined.
+    This function returns a dataframe where all datasets on city tempereature
+    and precipitation are combined.
     """
     cities = ["Eureka", "Fresno", "Los_Angeles", "Sacramento",
               "San_Diego", "San_Francisco"]
@@ -86,6 +90,7 @@ def main() -> None:
                          'Anopheles_quadrimaculatus_occurrence.csv'))
     mosquito3 = get_df_m(os.path.join('./dataset',
                          'Culex_tarsalis_occurrence.csv'))
+    print(mosquito3)
 
     city_data = write_df()
 
