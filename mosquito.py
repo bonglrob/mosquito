@@ -7,6 +7,7 @@ This file implements functions for mosquito prediction. ...
 
 import os
 import pandas as pd
+import numpy as np
 import geopandas as gpd
 import matplotlib.pyplot as plt
 
@@ -106,16 +107,23 @@ def clean_up_pop_df():
     pop4769.columns = columns
     pop4769 = pop4769.drop(columns=['1950_ap', '1960_ap', '1970'])
 
+    # 1970-80 data
     pop7080 = get_df_pop(get_path('popca_7080.xlsx'))
-    pop7080 = pop7080.loc[:, ['Unnamed: 0', 'Unnamed: 1', 'Unnamed: 2']]
+    pop7080 = pop7080.loc[15:, ['Unnamed: 0', 'Unnamed: 1', 'Unnamed: 2']]
     pop7080.columns = ['County', 'Year', 'Population']
+    
+    # fill county
+    for i in range(15, 768, 13):
+        pop7080.loc[i:i+10, 'County'] = pop7080.loc[i, 'County']
+    
+    pop7080 = pop7080.dropna()
+    # remove rows that show sum and average
+    # blank = pop7080.index[pop7080['Year'] == np.nan].tolist()
+    # pop7080.drop(blank)
     print(pop7080)
-    pop_all = pop4769.copy()
-    pop_1970 = []
-    for i in range(58):
-        pop_id = 15 + i * 13
-        pop_1970.append(pop7080.loc[15, 2])
-    print(pop_all)
+    
+    
+    # print(pop_all)
     # append a list of 1970 based on county
     # do the same for all
 
