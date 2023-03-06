@@ -7,6 +7,7 @@ This file implements functions for mosquito prediction. ...
 
 import os
 import pandas as pd
+from shapely.geometry import Point
 import numpy as np
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -133,7 +134,7 @@ def combine_pop_df():
     pop_all = pop_all.merge(pop_00, left_on='County', right_on='County', how='left')
     pop_all = pop_all.merge(pop_10, left_on='County', right_on='County', how='left')
 
-    print(pop_all)
+    # print(pop_all)
     return pop_all
 
 
@@ -205,21 +206,46 @@ def clean_up_pop_df(filename: str, start_id: int, interval: int):
     return pop_df
 
 
+def get_geometry(mdf: pd.DataFrame) -> pd.DataFrame:
+    """
+    This functino takes mosquito dataset and converts it into GeoDataFrame.
+    """
+    # coordinates column
+    coordinates = zip(mdf['decimalLongitude'], mdf['decimalLatitude'])
+    mdf['coordinates'] = [
+        Point(-lon, lat) for lon, lat in coordinates
+    ]
+
+    # convert it to a geopandas
+    mdf = gpd.GeoDataFrame(mdf, geometry='coordinates')
+    return mdf
+
+
+def get_map():
+    """
+    This function returns US map GeoDataFrame
+    """
+    pass
+
+
 def main() -> None:
     # read files
     # mosquito1 = get_df_m(get_path('Aedes_aegypti_occurrence.csv'))
     # mosquito2 = get_df_m(get_path('Anopheles_quadrimaculatus_occurrence.csv'))
-    # mosquito3 = get_df_m(get_path('Culex_tarsalis_occurrence.csv'))
-    # print(mosquito3)
+    mosquito3 = get_df_m(get_path('Culex_tarsalis_occurrence.csv'))
+    print(mosquito3.columns)
+    geomosquito3 = get_geometry(mosquito3)
+    geomosquito3.plot()
+    plt.savefig("test.png")
 
     # question 1
 
     # question 2
 
     # question 3
-    city_data = generate_city_df()
-    pop_df = combine_pop_df()
-    pop_df.to_csv(get_path('pop_all.csv'), index=False)
+    # city_data = generate_city_df()
+    # pop_df = combine_pop_df()
+    # pop_df.to_csv(get_path('pop_all.csv'), index=False)
     # still have some problems...
 
 
