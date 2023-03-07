@@ -246,10 +246,9 @@ def get_map_ca():
     """
     This function returns US map GeoDataFrame.
     """
-    country = gpd.read_file(get_path('gz_2010_us_040_00_5m.json'))
-    country = country[(country['NAME'] != 'Alaska') & (country['NAME'] != 'Hawaii')]
-    # TODO filter CA
-    return country
+    gdf = gpd.read_file(get_path('cb_2018_us_county_20m.shp'))
+    gdf = gdf[gdf['STATEFP'] == '06']
+    return gdf
 
 
 def filter_occurence_by_30_year(us_map: gpd.GeoDataFrame, occurence: pd.DataFrame, num: str):

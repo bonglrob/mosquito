@@ -10,14 +10,11 @@ from shapely.geometry import Point
 
 
 def main() -> None:
-    # read files
+    # read data
     mosquito1 = m.get_df_m(m.get_path('Aedes_aegypti_occurrence.csv'))
     mosquito2 = m.get_df_m(m.get_path('Anopheles_quadrimaculatus_occurrence.csv'))
     mosquito3 = m.get_df_m(m.get_path('Culex_tarsalis_occurrence.csv'))
-    print(mosquito3.columns)
-    geomosquito3 = m.get_geometry(mosquito3)
-
-
+    
     # question 1
     occurence_df = pd.read_csv(m.get_path('Occurence_Aedes_aegypti.csv'))
     # filter data to only US
@@ -62,8 +59,9 @@ def main() -> None:
     occurence_points = gpd.GeoDataFrame(occurence_94_23, geometry='coordinates4')
     occurence_points.plot(column='coordinates4', markersize=5, ax=ax4, vmin=0, vmax=1)
 
-    plt.show()
+    # plt.show()
     plt.close()
+    
 
     # question 2
 
@@ -74,9 +72,7 @@ def main() -> None:
     mosquito2_ca = m.filter_ca(mosquito2)
     mosquito3_ca = m.filter_ca(mosquito3)
 
-    
-    # ...
-
+    """
     # assign points to county !!
 
     # generate dataframe which has the total occurence in the area,
@@ -88,16 +84,19 @@ def main() -> None:
     # might use only July and August
     # testing: producing value
     # still have some problems...
+    """
     ca_map = m.get_map_ca()
     geom3_ca = m.ca_geomosquito(mosquito3)
 
     fig, ax = plt.subplots(1, figsize=(15, 7))
-    ca_map.plot(ax=ax)
-    geomosquito3.plot(color='black', markersize=10, ax=ax)
+    ca_map.plot(ax=ax, color='#EEEEEE', edgecolor='#FFFFFF')
+
+    county_with_m = gpd.sjoin(ca_map, geom3_ca, how='inner', op='intersects')
+    county_with_m.plot(ax=ax)
     geom3_ca.plot(color='red', markersize=2, ax=ax)
+
     plt.show()
     plt.close()
-    # looks different from fig 1
 
 
 if __name__ == '__main__':
