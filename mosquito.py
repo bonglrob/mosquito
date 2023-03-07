@@ -37,6 +37,7 @@ def get_df_m(file_path: str) -> pd.DataFrame:
                      'elevationAccuracy', 'depth', 'depthAccuracy', 'day',
                      'month', 'year']
                     ]
+    data = data["individualCount"].fillna(1)
     return data
 
 
