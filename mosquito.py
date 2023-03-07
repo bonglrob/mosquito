@@ -278,7 +278,3 @@ def main() -> None:
     filter_us(mosquito3)
     print(mosquito3.columns)
     geomosquito3 = get_geometry(mosquito3)
-
-
-# if __name__ == '__main__':
-#     main()
