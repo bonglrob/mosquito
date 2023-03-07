@@ -258,7 +258,6 @@ def filter_occurence_by_30_year(us_map: gpd.GeoDataFrame, occurence: pd.DataFram
     in a given year.
     """
     coordinates = zip(occurence['decimalLongitude'], occurence['decimalLatitude'])
-<<<<<<< Updated upstream
     occurence['coordinates' + num] = [Point(lon, lat) for lon, lat in coordinates]
 
 
@@ -284,6 +283,3 @@ def main() -> None:
 
 # if __name__ == '__main__':
 #     main()
-=======
-    occurence['coordinates' + num] = [Point(lon, lat) for lon, lat in coordinates]
->>>>>>> Stashed changes
