@@ -37,7 +37,7 @@ def get_df_m(file_path: str) -> pd.DataFrame:
                      'elevationAccuracy', 'depth', 'depthAccuracy', 'day',
                      'month', 'year']
                     ]
-    data = data["individualCount"].fillna(1)
+    data["individualCount"] = data["individualCount"].fillna(1)
     return data
 
 
@@ -266,9 +266,9 @@ def filter_us(occurence: pd.DataFrame):
     Returns occurence dataset filtered by US
     """
     # is_US = occurence["countryCode"] == "US"
-    is_1900 = occurence["year"] == 1900
+    is_2018 = occurence["year"] == 2018
     us_occurence = filter_ca(occurence)
-    us_occurence = us_occurence[is_1900]
+    us_occurence = us_occurence[is_2018]
     us_occurence["individualCount"].fillna(1)
     us_occurence = us_occurence["individualCount"].sum()
     return us_occurence

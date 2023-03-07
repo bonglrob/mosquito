@@ -59,12 +59,13 @@ def main() -> None:
     occurence_points = gpd.GeoDataFrame(occurence_94_23, geometry='coordinates4')
     occurence_points.plot(column='coordinates4', markersize=5, ax=ax4, vmin=0, vmax=1)
 
-    plt.show()
+    # plt.show()
     plt.close()
     
 
     # question 2
     # Filter US
+    print(mosquito1)
     us_occurence = m.filter_us(mosquito1)
     print(us_occurence)
 
