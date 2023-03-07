@@ -254,11 +254,22 @@ def filter_occurence_by_30_year(us_map: gpd.GeoDataFrame, occurence: pd.DataFram
     occurence['coordinates' + num] = [Point(lon, lat) for lon, lat in coordinates]
 
 
+def filter_us(occurence: pd.DataFrame):
+    """
+    Returns occurence dataset filtered by US
+    """
+    is_US = occurence["countryCode"] == "US"
+    us_occurence = occurence[is_US]
+    us_occurence["individualCount"].fillna(1)
+    us_occurence.groupby("stateProvince")["individualCount"].sum()
+
+
 def main() -> None:
     # read files
     # mosquito1 = get_df_m(get_path('Aedes_aegypti_occurrence.csv'))
     # mosquito2 = get_df_m(get_path('Anopheles_quadrimaculatus_occurrence.csv'))
     mosquito3 = get_df_m(get_path('Culex_tarsalis_occurrence.csv'))
+    filter_us(mosquito3)
     print(mosquito3.columns)
     geomosquito3 = get_geometry(mosquito3)
 
