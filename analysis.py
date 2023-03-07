@@ -63,17 +63,18 @@ def main() -> None:
     occurence_points.plot(column='coordinates4', markersize=5, ax=ax4, vmin=0, vmax=1)
 
     plt.show()
+    plt.close()
 
     # question 2
 
     # question 3
-    # city_data = generate_city_df()
-    # pop_df = combine_pop_df()
-    # pop_df.to_csv(get_path('pop_all.csv'), index=False)
-    # mosquito1_ca = filter_ca(mosquito1)
-    # mosquito2_ca = filter_ca(mosquito2)
-    # mosquito3_ca = filter_ca(mosquito3)
-    # geomosquito1_ca = get_geometry(mosquito1_ca)
+    city_data = m.generate_city_df()
+    pop_df = m.combine_pop_df()
+    mosquito1_ca = m.filter_ca(mosquito1)
+    mosquito2_ca = m.filter_ca(mosquito2)
+    mosquito3_ca = m.filter_ca(mosquito3)
+
+    
     # ...
 
     # assign points to county !!
@@ -88,11 +89,12 @@ def main() -> None:
     # testing: producing value
     # still have some problems...
     ca_map = m.get_map_ca()
+    geom3_ca = m.ca_geomosquito(mosquito3)
 
     fig, ax = plt.subplots(1, figsize=(15, 7))
     ca_map.plot(ax=ax)
     geomosquito3.plot(color='black', markersize=10, ax=ax)
-    plt.savefig("test.png")
+    geom3_ca.plot(color='red', markersize=2, ax=ax)
     plt.show()
     plt.close()
     # looks different from fig 1

@@ -40,13 +40,20 @@ def get_df_m(file_path: str) -> pd.DataFrame:
     return data
 
 
+def ca_geomosquito(df: pd.DataFrame):
+    """
+    This function takes DataFrame and returns filtered GeoDataFrame.
+    """
+    result = get_geometry(filter_ca(df))
+    return result
+
+
 def filter_ca(df: pd.DataFrame) -> pd.DataFrame:
     """
     This function takes a mosquito occurence
     dataframes and returns the dataframe only with rows including CA.
     """
     # filter rows
-    # need to check if all data has California...
     mask = df['stateProvince'] == 'California'
     return df[mask]
 
@@ -251,6 +258,7 @@ def filter_occurence_by_30_year(us_map: gpd.GeoDataFrame, occurence: pd.DataFram
     in a given year.
     """
     coordinates = zip(occurence['decimalLongitude'], occurence['decimalLatitude'])
+<<<<<<< Updated upstream
     occurence['coordinates' + num] = [Point(lon, lat) for lon, lat in coordinates]
 
 
@@ -276,3 +284,6 @@ def main() -> None:
 
 # if __name__ == '__main__':
 #     main()
+=======
+    occurence['coordinates' + num] = [Point(lon, lat) for lon, lat in coordinates]
+>>>>>>> Stashed changes
