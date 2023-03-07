@@ -7,9 +7,12 @@ This file implements functions for mosquito prediction. ...
 
 import os
 import pandas as pd
+from shapely.geometry import Point
 import numpy as np
 import geopandas as gpd
 import matplotlib.pyplot as plt
+from typing import List
+from shapely.geometry import Point
 
 
 def get_path(filename: str) -> str:
@@ -35,6 +38,18 @@ def get_df_m(file_path: str) -> pd.DataFrame:
                      'month', 'year']
                     ]
     return data
+
+
+def filter_ca(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    This function takes a mosquito occurence
+    dataframes and returns the dataframe only with rows including CA.
+    """
+    # filter rows
+    # need to check if all data has California...
+    mask = df['stateProvince'] == 'California'
+    return df[mask]
+
 
 
 def get_df_t(file_path: str) -> pd.DataFrame:
@@ -133,7 +148,7 @@ def combine_pop_df():
     pop_all = pop_all.merge(pop_00, left_on='County', right_on='County', how='left')
     pop_all = pop_all.merge(pop_10, left_on='County', right_on='County', how='left')
 
-    print(pop_all)
+    # print(pop_all)
     return pop_all
 
 
@@ -156,7 +171,7 @@ def change_style(pop: pd.DataFrame) -> pd.DataFrame:
     return pop_modified
 
 
-def column_name(df: pd.DataFrame) -> list[str]:
+def column_name(df: pd.DataFrame) -> List[str]:
     """
     This takes a dataframe and returns the dataframe with modified column name.
     """
@@ -205,24 +220,125 @@ def clean_up_pop_df(filename: str, start_id: int, interval: int):
     return pop_df
 
 
+def get_geometry(mdf: pd.DataFrame) -> pd.DataFrame:
+    """
+    This functino takes mosquito dataset and converts it into GeoDataFrame.
+    """
+    # coordinates column
+    coordinates = zip(mdf['decimalLongitude'], mdf['decimalLatitude'])
+    mdf['coordinates'] = [
+        Point(lon, lat) for lon, lat in coordinates
+    ]
+
+    # convert it to a geopandas
+    mdf = gpd.GeoDataFrame(mdf, geometry='coordinates')
+    return mdf
+
+
+def get_map_ca():
+    """
+    This function returns US map GeoDataFrame.
+    """
+    country = gpd.read_file(get_path('gz_2010_us_040_00_5m.json'))
+    country = country[(country['NAME'] != 'Alaska') & (country['NAME'] != 'Hawaii')]
+    # TODO filter CA
+    return country
+
+
+def filter_occurence_by_30_year(us_map: gpd.GeoDataFrame, occurence: pd.DataFrame, num: str):
+    """
+    Added a column in the given dataFrame that represents the (longitide, latitude) of the occurences
+    in a given year.
+    """
+    coordinates = zip(occurence['decimalLongitude'], occurence['decimalLatitude'])
+    occurence['coordinates' + num] = [Point(lon, lat) for lon, lat in coordinates]
 
 
 def main() -> None:
     # read files
-    mosquito1 = get_df_m(get_path('Aedes_aegypti_occurrence.csv'))
-    mosquito2 = get_df_m(get_path('Anopheles_quadrimaculatus_occurrence.csv'))
+    # mosquito1 = get_df_m(get_path('Aedes_aegypti_occurrence.csv'))
+    # mosquito2 = get_df_m(get_path('Anopheles_quadrimaculatus_occurrence.csv'))
     mosquito3 = get_df_m(get_path('Culex_tarsalis_occurrence.csv'))
-    print(mosquito3)
+    print(mosquito3.columns)
+    geomosquito3 = get_geometry(mosquito3)
+
 
     # question 1
+    occurence_df = pd.read_csv(get_path('Occurence_Aedes_aegypti.csv'))
+    # filter data to only US
+    is_US = occurence_df['countryCode'] == 'US'
+    occurence_df = occurence_df[is_US]
+    # print(occurence_df['individualCount'].dropna())
+
+    # prepare map of US
+    us_map = gpd.read_file(get_path('gz_2010_us_040_00_5m.json'))
+    us_map = us_map[(us_map['NAME'] != 'Alaska') & (us_map['NAME'] != 'Hawaii')]
+
+    # 1904 - 2023
+    btn_04_33 = (occurence_df['year'] >= 1904) & (occurence_df['year'] <= 1933)
+    btn_34_63 = (occurence_df['year'] >= 1934) & (occurence_df['year'] <= 1963)
+    btn_64_93 = (occurence_df['year'] >= 1964) & (occurence_df['year'] <= 1993)
+    btn_94_23 = (occurence_df['year'] >= 1994) & (occurence_df['year'] <= 2023)
+
+    occurence_04_33 = occurence_df[btn_04_33]
+    occurence_34_63 = occurence_df[btn_34_63]
+    occurence_64_93 = occurence_df[btn_64_93]
+    occurence_94_23 = occurence_df[btn_94_23]
+
+    filter_occurence_by_30_year(us_map, occurence_04_33, '1')
+    filter_occurence_by_30_year(us_map, occurence_34_63, '2')
+    filter_occurence_by_30_year(us_map, occurence_64_93, '3')
+    filter_occurence_by_30_year(us_map, occurence_94_23, '4')
+
+    fig, [[ax1, ax2], [ax3, ax4]] = plt.subplots(2, 2, figsize=(20, 10))
+    us_map.plot(color='#EEEEEE', edgecolor='#FFFFFF', ax=ax1)
+    occurence_points = gpd.GeoDataFrame(occurence_04_33, geometry='coordinates1')
+    occurence_points.plot(column='coordinates1', markersize=5, ax=ax1, vmin=0, vmax=1)
+
+    us_map.plot(color='#EEEEEE', edgecolor='#FFFFFF', ax=ax2)
+    occurence_points = gpd.GeoDataFrame(occurence_34_63, geometry='coordinates2')
+    occurence_points.plot(column='coordinates2', markersize=5, ax=ax2, vmin=0, vmax=1)
+
+    us_map.plot(color='#EEEEEE', edgecolor='#FFFFFF', ax=ax3)
+    occurence_points = gpd.GeoDataFrame(occurence_64_93, geometry='coordinates3')
+    occurence_points.plot(column='coordinates3', markersize=5, ax=ax3, vmin=0, vmax=1)
+
+    us_map.plot(color='#EEEEEE', edgecolor='#FFFFFF', ax=ax4)
+    occurence_points = gpd.GeoDataFrame(occurence_94_23, geometry='coordinates4')
+    occurence_points.plot(column='coordinates4', markersize=5, ax=ax4, vmin=0, vmax=1)
+
+    plt.show()
 
     # question 2
 
     # question 3
-    city_data = generate_city_df()
-    pop_df = combine_pop_df()
-    pop_df.to_csv(get_path('pop_all.csv'), index=False)
+    # city_data = generate_city_df()
+    # pop_df = combine_pop_df()
+    # pop_df.to_csv(get_path('pop_all.csv'), index=False)
+    # mosquito1_ca = filter_ca(mosquito1)
+    # mosquito2_ca = filter_ca(mosquito2)
+    # mosquito3_ca = filter_ca(mosquito3)
+    # geomosquito1_ca = get_geometry(mosquito1_ca)
+    # ...
+
+    # assign points to county !!
+
+    # generate dataframe which has the total occurence in the area,
+    # species, year, month, area, areas temp, areas rainfall, areas temp columns, previous occurence
+
+    # use machine learning label: ocuurence, features other columns in the dataframe
+    # Regression model
+
     # still have some problems...
+    ca_map = get_map_ca()
+
+    fig, ax = plt.subplots(1, figsize=(15, 7))
+    ca_map.plot(ax=ax)
+    geomosquito3.plot(color='black', markersize=10, ax=ax)
+    plt.savefig("test.png")
+    plt.show()
+    plt.close()
+    # looks different from fig 1
 
 
 if __name__ == '__main__':
