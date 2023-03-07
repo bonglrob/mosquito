@@ -258,21 +258,10 @@ def filter_us(occurence: pd.DataFrame):
     """
     Returns occurence dataset filtered by US
     """
-    is_US = occurence["countryCode"] == "US"
-    us_occurence = occurence[is_US]
+    # is_US = occurence["countryCode"] == "US"
+    is_1900 = occurence["year"] == 1900
+    us_occurence = filter_ca(occurence)
+    us_occurence = us_occurence[is_1900]
     us_occurence["individualCount"].fillna(1)
-    us_occurence.groupby("stateProvince")["individualCount"].sum()
-
-
-def main() -> None:
-    # read files
-    # mosquito1 = get_df_m(get_path('Aedes_aegypti_occurrence.csv'))
-    # mosquito2 = get_df_m(get_path('Anopheles_quadrimaculatus_occurrence.csv'))
-    mosquito3 = get_df_m(get_path('Culex_tarsalis_occurrence.csv'))
-    filter_us(mosquito3)
-    print(mosquito3.columns)
-    geomosquito3 = get_geometry(mosquito3)
-
-
-# if __name__ == '__main__':
-#     main()
+    us_occurence = us_occurence["individualCount"].sum()
+    return us_occurence

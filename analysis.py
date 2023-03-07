@@ -65,6 +65,9 @@ def main() -> None:
     plt.show()
 
     # question 2
+    # Filter US
+    us_occurence = m.filter_us(mosquito1)
+    print(us_occurence)
 
     # question 3
     # city_data = generate_city_df()
