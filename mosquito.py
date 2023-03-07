@@ -1,6 +1,6 @@
 """
 CSE 163 Final Project
-Kyoko Kurihara, Name here?
+Kyoko Kurihara, Robert Bonglamphone, name here?
 
 This file implements functions for mosquito prediction. ...
 """
@@ -205,12 +205,14 @@ def clean_up_pop_df(filename: str, start_id: int, interval: int):
     return pop_df
 
 
+
+
 def main() -> None:
     # read files
-    # mosquito1 = get_df_m(get_path('Aedes_aegypti_occurrence.csv'))
-    # mosquito2 = get_df_m(get_path('Anopheles_quadrimaculatus_occurrence.csv'))
-    # mosquito3 = get_df_m(get_path('Culex_tarsalis_occurrence.csv'))
-    # print(mosquito3)
+    mosquito1 = get_df_m(get_path('Aedes_aegypti_occurrence.csv'))
+    mosquito2 = get_df_m(get_path('Anopheles_quadrimaculatus_occurrence.csv'))
+    mosquito3 = get_df_m(get_path('Culex_tarsalis_occurrence.csv'))
+    print(mosquito3)
 
     # question 1
 
