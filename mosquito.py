@@ -40,6 +40,18 @@ def get_df_m(file_path: str) -> pd.DataFrame:
     return data
 
 
+def filter_ca(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    This function takes a mosquito occurence
+    dataframes and returns the dataframe only with rows including CA.
+    """
+    # filter rows
+    # need to check if all data has California...
+    mask = df['stateProvince'] == 'California'
+    return df[mask]
+
+
+
 def get_df_t(file_path: str) -> pd.DataFrame:
     """
     This function takes a file name (str) of one of temperature datasets
@@ -215,7 +227,7 @@ def get_geometry(mdf: pd.DataFrame) -> pd.DataFrame:
     # coordinates column
     coordinates = zip(mdf['decimalLongitude'], mdf['decimalLatitude'])
     mdf['coordinates'] = [
-        Point(-lon, lat) for lon, lat in coordinates
+        Point(lon, lat) for lon, lat in coordinates
     ]
 
     # convert it to a geopandas
@@ -223,11 +235,14 @@ def get_geometry(mdf: pd.DataFrame) -> pd.DataFrame:
     return mdf
 
 
-def get_map():
+def get_map_ca():
     """
-    This function returns US map GeoDataFrame
+    This function returns US map GeoDataFrame.
     """
-    pass
+    country = gpd.read_file(get_path('gz_2010_us_040_00_5m.json'))
+    country = country[(country['NAME'] != 'Alaska') & (country['NAME'] != 'Hawaii')]
+    # TODO filter CA
+    return country
 
 
 def filter_occurence_by_30_year(us_map: gpd.GeoDataFrame, occurence: pd.DataFrame, num: str):
@@ -246,8 +261,7 @@ def main() -> None:
     mosquito3 = get_df_m(get_path('Culex_tarsalis_occurrence.csv'))
     print(mosquito3.columns)
     geomosquito3 = get_geometry(mosquito3)
-    geomosquito3.plot()
-    plt.savefig("test.png")
+
 
     # question 1
     occurence_df = pd.read_csv(get_path('Occurence_Aedes_aegypti.csv'))
@@ -301,7 +315,29 @@ def main() -> None:
     # city_data = generate_city_df()
     # pop_df = combine_pop_df()
     # pop_df.to_csv(get_path('pop_all.csv'), index=False)
+    # mosquito1_ca = filter_ca(mosquito1)
+    # mosquito2_ca = filter_ca(mosquito2)
+    # mosquito3_ca = filter_ca(mosquito3)
+    # geomosquito1_ca = get_geometry(mosquito1_ca)
+    # ...
+
+    # assign points to county !!
+
+    # generate dataframe which has the total occurence in the area,
+    # species, year, month, area, areas temp, areas rainfall, areas temp columns
+
+    # use machine learning label: ocuurence, features other columns in the dataframe
+
     # still have some problems...
+    ca_map = get_map_ca()
+
+    fig, ax = plt.subplots(1, figsize=(15, 7))
+    ca_map.plot(ax=ax)
+    geomosquito3.plot(color='black', markersize=10, ax=ax)
+    plt.savefig("test.png")
+    plt.show()
+    plt.close()
+    # looks different from fig 1
 
 
 if __name__ == '__main__':
