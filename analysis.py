@@ -14,7 +14,7 @@ def main() -> None:
     mosquito1 = m.get_df_m(m.get_path('Aedes_aegypti_occurrence.csv'))
     mosquito2 = m.get_df_m(m.get_path('Anopheles_quadrimaculatus_occurrence.csv'))
     mosquito3 = m.get_df_m(m.get_path('Culex_tarsalis_occurrence.csv'))
-    
+
     # question 1
     occurence_df = pd.read_csv(m.get_path('Occurence_Aedes_aegypti.csv'))
     # filter data to only US
@@ -59,13 +59,12 @@ def main() -> None:
     occurence_points = gpd.GeoDataFrame(occurence_94_23, geometry='coordinates4')
     occurence_points.plot(column='coordinates4', markersize=5, ax=ax4, vmin=0, vmax=1)
 
-    # plt.show()
+    plt.show()
     plt.close()
-    
+
 
     # question 2
     # Filter US
-    print(mosquito1)
     us_occurence = m.filter_us(mosquito1)
     print(us_occurence)
 
@@ -99,7 +98,7 @@ def main() -> None:
     county_with_m.plot(ax=ax)
     geom3_ca.plot(color='red', markersize=2, ax=ax)
 
-    plt.show()
+    # plt.show()
     plt.close()
 
 
