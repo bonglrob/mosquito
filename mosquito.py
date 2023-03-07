@@ -324,9 +324,10 @@ def main() -> None:
     # assign points to county !!
 
     # generate dataframe which has the total occurence in the area,
-    # species, year, month, area, areas temp, areas rainfall, areas temp columns
+    # species, year, month, area, areas temp, areas rainfall, areas temp columns, previous occurence
 
     # use machine learning label: ocuurence, features other columns in the dataframe
+    # Regression model
 
     # still have some problems...
     ca_map = get_map_ca()
