@@ -14,7 +14,6 @@ def main() -> None:
     mosquito1 = m.get_df_m(m.get_path('Aedes_aegypti_occurrence.csv'))
     mosquito2 = m.get_df_m(m.get_path('Anopheles_quadrimaculatus_occurrence.csv'))
     mosquito3 = m.get_df_m(m.get_path('Culex_tarsalis_occurrence.csv'))
-
     # question 1
     # prepare map of US
     us_map = gpd.read_file(m.get_path('gz_2010_us_040_00_5m.json'))
@@ -70,10 +69,14 @@ def main() -> None:
 
     # question 3
     city_data = m.generate_city_df()
+    # city_data.to_csv(m.get_path('city_data.csv'), index=False)
     pop_df = m.combine_pop_df()
+    # pop_df.to_csv(m.get_path('pop_all.csv'), index=False)
     mosquito1_ca = m.filter_ca(mosquito1)
     mosquito2_ca = m.filter_ca(mosquito2)
     mosquito3_ca = m.filter_ca(mosquito3)
+
+    m.merge_all_data(mosquito1)
 
     """
     # assign points to county !!
@@ -87,7 +90,7 @@ def main() -> None:
     # might use only July and August
     # testing: producing value
     # still have some problems...
-    """
+    
     ca_map = m.get_map_ca()
     geom3_ca = m.ca_geomosquito(mosquito3)
 
@@ -100,6 +103,7 @@ def main() -> None:
 
     # plt.show()
     plt.close()
+    """
 
 
 if __name__ == '__main__':
