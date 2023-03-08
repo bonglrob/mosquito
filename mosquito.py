@@ -24,7 +24,7 @@ def get_path(filename: str) -> str:
 
 def get_df_m(file_path: str) -> pd.DataFrame:
     """
-    This function takes a file name (str) of one of mosquito occurence
+    This function takes a file name (str) of one of mosquito occurrence
     datasets and returns the dataframe.
     """
     # is there any other way "low_memory=False"
@@ -51,7 +51,7 @@ def ca_geomosquito(df: pd.DataFrame):
 
 def filter_ca(df: pd.DataFrame) -> pd.DataFrame:
     """
-    This function takes a mosquito occurence
+    This function takes a mosquito occurrence
     dataframes and returns the dataframe only with rows including CA.
     """
     # filter rows
@@ -252,13 +252,13 @@ def get_map_ca():
     return gdf
 
 
-def filter_occurence_by_30_year(us_map: gpd.GeoDataFrame, occurence: pd.DataFrame, num: str):
+def filter_occurrence_by_30_year(us_map: gpd.GeoDataFrame, occurrence: pd.DataFrame, num: str):
     """
-    Added a column in the given dataFrame that represents the (longitide, latitude) of the occurences
+    Added a column in the given dataFrame that represents the (longitide, latitude) of the occurrences
     in a given year.
     """
-    coordinates = zip(occurence['decimalLongitude'], occurence['decimalLatitude'])
-    occurence['coordinates' + num] = [Point(lon, lat) for lon, lat in coordinates]
+    coordinates = zip(occurrence['decimalLongitude'], occurrence['decimalLatitude'])
+    occurrence['coordinates' + num] = [Point(lon, lat) for lon, lat in coordinates]
 
 
 def filter_us(occurence: pd.DataFrame):

@@ -16,48 +16,53 @@ def main() -> None:
     mosquito3 = m.get_df_m(m.get_path('Culex_tarsalis_occurrence.csv'))
 
     # question 1
-    occurence_df = pd.read_csv(m.get_path('Occurence_Aedes_aegypti.csv'))
+    occurrence_df = pd.read_csv(m.get_path('Occurrence_Aedes_aegypti.csv'))
     # filter data to only US
-    is_US = occurence_df['countryCode'] == 'US'
-    occurence_df = occurence_df[is_US]
-    # print(occurence_df['individualCount'].dropna())
+    is_US = occurrence_df['countryCode'] == 'US'
+    occurrence_df = occurrence_df[is_US]
 
     # prepare map of US
     us_map = gpd.read_file(m.get_path('gz_2010_us_040_00_5m.json'))
     us_map = us_map[(us_map['NAME'] != 'Alaska') & (us_map['NAME'] != 'Hawaii')]
 
     # 1904 - 2023
-    btn_04_33 = (occurence_df['year'] >= 1904) & (occurence_df['year'] <= 1933)
-    btn_34_63 = (occurence_df['year'] >= 1934) & (occurence_df['year'] <= 1963)
-    btn_64_93 = (occurence_df['year'] >= 1964) & (occurence_df['year'] <= 1993)
-    btn_94_23 = (occurence_df['year'] >= 1994) & (occurence_df['year'] <= 2023)
+    btn_04_33 = (occurrence_df['year'] >= 1904) & (occurrence_df['year'] <= 1933)
+    btn_34_63 = (occurrence_df['year'] >= 1934) & (occurrence_df['year'] <= 1963)
+    btn_64_93 = (occurrence_df['year'] >= 1964) & (occurrence_df['year'] <= 1993)
+    btn_94_23 = (occurrence_df['year'] >= 1994) & (occurrence_df['year'] <= 2023) &\
+                (occurrence_df['stateProvince'] != 'Hawaii')
 
-    occurence_04_33 = occurence_df[btn_04_33]
-    occurence_34_63 = occurence_df[btn_34_63]
-    occurence_64_93 = occurence_df[btn_64_93]
-    occurence_94_23 = occurence_df[btn_94_23]
+    occurrence_04_33 = occurrence_df[btn_04_33]
+    occurrence_34_63 = occurrence_df[btn_34_63]
+    occurrence_64_93 = occurrence_df[btn_64_93]
+    occurrence_94_23 = occurrence_df[btn_94_23]
 
-    m.filter_occurence_by_30_year(us_map, occurence_04_33, '1')
-    m.filter_occurence_by_30_year(us_map, occurence_34_63, '2')
-    m.filter_occurence_by_30_year(us_map, occurence_64_93, '3')
-    m.filter_occurence_by_30_year(us_map, occurence_94_23, '4')
+    m.filter_occurrence_by_30_year(us_map, occurrence_04_33, '1')
+    m.filter_occurrence_by_30_year(us_map, occurrence_34_63, '2')
+    m.filter_occurrence_by_30_year(us_map, occurrence_64_93, '3')
+    m.filter_occurrence_by_30_year(us_map, occurrence_94_23, '4')
 
     fig, [[ax1, ax2], [ax3, ax4]] = plt.subplots(2, 2, figsize=(20, 10))
     us_map.plot(color='#EEEEEE', edgecolor='#FFFFFF', ax=ax1)
-    occurence_points = gpd.GeoDataFrame(occurence_04_33, geometry='coordinates1')
-    occurence_points.plot(column='coordinates1', markersize=5, ax=ax1, vmin=0, vmax=1)
+    occurrence_points = gpd.GeoDataFrame(occurrence_04_33, geometry='coordinates1')
+    occurrence_points.plot(column='coordinates1', markersize=5, ax=ax1, vmin=0, vmax=1)
+    ax1.set_title('Occurrences of yellow fever mosquito in 1903-1933')
 
     us_map.plot(color='#EEEEEE', edgecolor='#FFFFFF', ax=ax2)
-    occurence_points = gpd.GeoDataFrame(occurence_34_63, geometry='coordinates2')
-    occurence_points.plot(column='coordinates2', markersize=5, ax=ax2, vmin=0, vmax=1)
+    occurrence_points = gpd.GeoDataFrame(occurrence_34_63, geometry='coordinates2')
+    occurrence_points.plot(column='coordinates2', markersize=5, ax=ax2, vmin=0, vmax=1)
+    ax2.set_title('Occurrences of yellow fever mosquito in 1934-1963')
 
     us_map.plot(color='#EEEEEE', edgecolor='#FFFFFF', ax=ax3)
-    occurence_points = gpd.GeoDataFrame(occurence_64_93, geometry='coordinates3')
-    occurence_points.plot(column='coordinates3', markersize=5, ax=ax3, vmin=0, vmax=1)
+    occurrence_points = gpd.GeoDataFrame(occurrence_64_93, geometry='coordinates3')
+    occurrence_points.plot(column='coordinates3', markersize=5, ax=ax3, vmin=0, vmax=1)
+    ax3.set_title('Occurrences of yellow fever mosquito in 1964-1993')
 
     us_map.plot(color='#EEEEEE', edgecolor='#FFFFFF', ax=ax4)
-    occurence_points = gpd.GeoDataFrame(occurence_94_23, geometry='coordinates4')
-    occurence_points.plot(column='coordinates4', markersize=5, ax=ax4, vmin=0, vmax=1)
+    occurrence_points = gpd.GeoDataFrame(occurrence_94_23, geometry='coordinates4')
+    occurrence_points.plot(column='coordinates4', markersize=5, ax=ax4, vmin=0, vmax=1)
+    ax4.set_title('Occurrences of yellow fever mosquito in 1994-2023')
+    plt.savefig('Occurrence_yellow_fever.png')
 
     plt.show()
     plt.close()
@@ -65,8 +70,8 @@ def main() -> None:
 
     # question 2
     # Filter US
-    us_occurence = m.filter_us(mosquito1)
-    print(us_occurence)
+    us_occurrence = m.filter_us(mosquito1)
+    print(us_occurrence)
 
     # question 3
     city_data = m.generate_city_df()
@@ -78,8 +83,8 @@ def main() -> None:
     """
     # assign points to county !!
 
-    # generate dataframe which has the total occurence in the area,
-    # species, year, month, area, areas temp, areas rainfall, areas temp columns, previous occurence
+    # generate dataframe which has the total occurrence in the area,
+    # species, year, month, area, areas temp, areas rainfall, areas temp columns, previous occurrence
 
     # use machine learning label: ocuurence, features other columns in the dataframe
     # Regression model
