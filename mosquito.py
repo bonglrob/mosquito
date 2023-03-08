@@ -13,6 +13,7 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 from typing import List
 from shapely.geometry import Point
+import plotly.express as px
 
 
 def get_path(filename: str) -> str:
@@ -31,8 +32,8 @@ def get_df_m(file_path: str) -> pd.DataFrame:
     data = pd.read_csv(file_path, delimiter='\t', low_memory=False)
     # select columns
     data = data.loc[data['countryCode'] == 'US',
-                    ['gbifID', 'species', 'countryCode', 'locality',
-                     'stateProvince', 'occurrenceStatus', 'individualCount',
+                    ['species', 'countryCode', 'locality',
+                     'stateProvince', 'individualCount',
                      'decimalLatitude', 'decimalLongitude', 'elevation',
                      'elevationAccuracy', 'depth', 'depthAccuracy', 'day',
                      'month', 'year']
@@ -265,10 +266,17 @@ def filter_us(occurence: pd.DataFrame):
     """
     Returns occurence dataset filtered by US
     """
-    # is_US = occurence["countryCode"] == "US"
-    is_2018 = occurence["year"] == 2018
     us_occurence = filter_ca(occurence)
-    us_occurence = us_occurence[is_2018]
-    us_occurence["individualCount"].fillna(1)
-    us_occurence = us_occurence["individualCount"].sum()
+    is_1904 = us_occurence["year"] == 2014
+    new_df = us_occurence[is_1904]
+    print("df:", new_df)
+    # min_value = occurence["year"].min()
+    # us_occurence = us_occurence.loc[:, ["species", "individualCount", "month", "year"]]
+    # us_occurence = us_occurence["individualCount"].sum()
+    # print(min_value)
     return us_occurence
+
+# def merge_df(occurence1, occurence2):
+#     result = occurence1.merge(occurence2, left_on="year",
+#                             right_on="year", how="outer")
+#     return result
