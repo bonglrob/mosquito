@@ -16,11 +16,6 @@ def main() -> None:
     mosquito3 = m.get_df_m(m.get_path('Culex_tarsalis_occurrence.csv'))
 
     # question 1
-    # mosquito1 = pd.read_csv(m.get_path('Occurrence_Aedes_aegypti.csv'))
-    # # filter data to only US
-    # is_US = mosquito1['countryCode'] == 'US'
-    # mosquito1 = mosquito1[is_US]
-
     # prepare map of US
     us_map = gpd.read_file(m.get_path('gz_2010_us_040_00_5m.json'))
     us_map = us_map[(us_map['NAME'] != 'Alaska') & (us_map['NAME'] != 'Hawaii')]
@@ -37,10 +32,10 @@ def main() -> None:
     occurrence_64_93 = mosquito1[btn_64_93]
     occurrence_94_23 = mosquito1[btn_94_23]
 
-    m.filter_occurrence_by_30_year(us_map, occurrence_04_33, '1')
-    m.filter_occurrence_by_30_year(us_map, occurrence_34_63, '2')
-    m.filter_occurrence_by_30_year(us_map, occurrence_64_93, '3')
-    m.filter_occurrence_by_30_year(us_map, occurrence_94_23, '4')
+    m.filter_occurrence_by_30_year(occurrence_04_33, '1')
+    m.filter_occurrence_by_30_year(occurrence_34_63, '2')
+    m.filter_occurrence_by_30_year(occurrence_64_93, '3')
+    m.filter_occurrence_by_30_year(occurrence_94_23, '4')
 
     fig, [[ax1, ax2], [ax3, ax4]] = plt.subplots(2, 2, figsize=(20, 10))
     us_map.plot(color='#EEEEEE', edgecolor='#FFFFFF', ax=ax1)

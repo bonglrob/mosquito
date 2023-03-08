@@ -252,7 +252,7 @@ def get_map_ca():
     return gdf
 
 
-def filter_occurrence_by_30_year(us_map: gpd.GeoDataFrame, occurrence: pd.DataFrame, num: str):
+def filter_occurrence_by_30_year(occurrence: pd.DataFrame, num: str):
     """
     Added a column in the given dataFrame that represents the (longitide, latitude) of the occurrences
     in a given year.
