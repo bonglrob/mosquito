@@ -16,26 +16,26 @@ def main() -> None:
     mosquito3 = m.get_df_m(m.get_path('Culex_tarsalis_occurrence.csv'))
 
     # question 1
-    occurrence_df = pd.read_csv(m.get_path('Occurrence_Aedes_aegypti.csv'))
-    # filter data to only US
-    is_US = occurrence_df['countryCode'] == 'US'
-    occurrence_df = occurrence_df[is_US]
+    # mosquito1 = pd.read_csv(m.get_path('Occurrence_Aedes_aegypti.csv'))
+    # # filter data to only US
+    # is_US = mosquito1['countryCode'] == 'US'
+    # mosquito1 = mosquito1[is_US]
 
     # prepare map of US
     us_map = gpd.read_file(m.get_path('gz_2010_us_040_00_5m.json'))
     us_map = us_map[(us_map['NAME'] != 'Alaska') & (us_map['NAME'] != 'Hawaii')]
 
     # 1904 - 2023
-    btn_04_33 = (occurrence_df['year'] >= 1904) & (occurrence_df['year'] <= 1933)
-    btn_34_63 = (occurrence_df['year'] >= 1934) & (occurrence_df['year'] <= 1963)
-    btn_64_93 = (occurrence_df['year'] >= 1964) & (occurrence_df['year'] <= 1993)
-    btn_94_23 = (occurrence_df['year'] >= 1994) & (occurrence_df['year'] <= 2023) &\
-                (occurrence_df['stateProvince'] != 'Hawaii')
+    btn_04_33 = (mosquito1['year'] >= 1904) & (mosquito1['year'] <= 1933)
+    btn_34_63 = (mosquito1['year'] >= 1934) & (mosquito1['year'] <= 1963)
+    btn_64_93 = (mosquito1['year'] >= 1964) & (mosquito1['year'] <= 1993)
+    btn_94_23 = (mosquito1['year'] >= 1994) & (mosquito1['year'] <= 2023) &\
+                (mosquito1['stateProvince'] != 'Hawaii')
 
-    occurrence_04_33 = occurrence_df[btn_04_33]
-    occurrence_34_63 = occurrence_df[btn_34_63]
-    occurrence_64_93 = occurrence_df[btn_64_93]
-    occurrence_94_23 = occurrence_df[btn_94_23]
+    occurrence_04_33 = mosquito1[btn_04_33]
+    occurrence_34_63 = mosquito1[btn_34_63]
+    occurrence_64_93 = mosquito1[btn_64_93]
+    occurrence_94_23 = mosquito1[btn_94_23]
 
     m.filter_occurrence_by_30_year(us_map, occurrence_04_33, '1')
     m.filter_occurrence_by_30_year(us_map, occurrence_34_63, '2')
