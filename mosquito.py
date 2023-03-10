@@ -14,7 +14,6 @@ import matplotlib.pyplot as plt
 from typing import List
 from typing import Any
 from shapely.geometry import Point
-import plotly.express as px
 
 
 def get_path(filename: str) -> str:
@@ -277,18 +276,15 @@ def ca_occurrence(mosquito: pd.DataFrame):
     ca_map = get_map_ca()
     mosquito_ca = ca_geomosquito(mosquito)
     merged = gpd.sjoin(ca_map, mosquito_ca, how='inner', op='intersects')
-    # print(merged.columns)
     columns_to_drop = ['STATEFP', 'COUNTYNS', 'AFFGEOID', 'GEOID']
     merged = merged.drop(columns_to_drop, axis=1)
-    # print(merged)
-    # print(merged.columns)
     return merged
 
 
-def merge_all_data(mosquito: pd.DataFrame):
-    occurrence = ca_occurrence(mosquito)
-    city_df = generate_city_df()
-    pop_df = combine_pop_df()
+def get_capital(county: str) -> str:
+    """
+    This funciton takes a county name (str) and returns the capital city that the county belongs to.
+    """
     gp_eureka = ["Humboldt", "Del Norte", "Lake", "Mendocino", "Modoc",
                  "Shasta", "Siskiyou", "Tahama", "Trinity"]
     gp_fresno = ["Fresno", "Inyo", "Kern", "Kings", "Madera", "Mariposa",
@@ -303,12 +299,105 @@ def merge_all_data(mosquito: pd.DataFrame):
     gp_la = ["Los Angeles", "Monterey", "Orange", "Riverside", "San Benito",
              "San Bernardino", "San Joaquin", "Santa Barbara",
              "San Luis Obispo", "Ventura"]
+    groups = [gp_eureka, gp_fresno, gp_sacramento, gp_sd, gp_sf, gp_la]
+    for group in groups:
+        if county in group:
+            capital = group[0]
+            if capital == 'Euraka':
+                return 'Humboldt'
+            return capital
 
+
+def add_0(num: float) -> str:
+    """
+    This function takes a number between 1 to 12 and returns it in a format of 'XX'.
+    """
+    if num < 10:
+        result = '0' + str(int(num))
+    else:
+        result = str(int(num))
+    return result
+
+
+def merge_all_data(mosquito: pd.DataFrame):
+    occurrence = ca_occurrence(mosquito)
+    city_df = generate_city_df()
+    city_df = city_df.reset_index(drop=True)
+    pop_df = combine_pop_df()
     # print(len(gp_eureka) + len(gp_fresno) + len(gp_sacramento) + len(gp_sd) + len(gp_sf) + len(gp_la), "Counties")
     # print(len(set(gp_eureka + gp_fresno + gp_sacramento + gp_sd + gp_sf + gp_la)), "Counties")
 
+    occurrence = occurrence[occurrence['year'] != 2023.0]
+    occurrence = occurrence.reset_index(drop=True)
 
-def filter_occurrence_by_30_year(occurrence: pd.DataFrame, num: str):
+    for i in occurrence.index.tolist():
+        # population
+        year = occurrence.loc[i, 'year']
+        county = occurrence.loc[i, 'NAME']
+        occurrence.loc[i, 'population'] = pop_df.loc[pop_df.loc[pop_df['County'] == county].index[0], int(year)]
+
+        # temperature & precipitation
+        capital = get_capital(county)
+        month = occurrence.loc[i, 'month']
+        yyyymm = str(int(year))+add_0(month)
+        temp = 'Temp_' + capital
+        prec = 'Prec_' + capital
+        occurrence.loc[i, 'temperature'] = city_df.loc[city_df.loc[city_df['Date'] == yyyymm].index[0], temp]
+        occurrence.loc[i, 'precipitation'] = city_df.loc[city_df.loc[city_df['Date'] == yyyymm].index[0], prec]
+    return occurrence
+
+
+def prediction(data):
+    """
+    This function TBD
+    """
+    # import necessary libraries
+    from sklearn.ensemble import RandomForestRegressor
+    # from sklearn.preprocessing import OneHotEncoder
+    from sklearn.model_selection import train_test_split
+    from sklearn.metrics import mean_squared_error
+    import geopandas as gpd
+    import pandas as pd
+
+    # encoder = OneHotEncoder(sparse=False)
+    # encoded_features = encoder.fit_transform(data[['NAME']])
+    dummies = pd.get_dummies(data['NAME'])
+    data = pd.concat([data, dummies], axis=1)
+    print(data.columns)
+    data.to_csv('prediction.csv', index=False)
+    data = data.drop(columns=[ 'NAME', 'index_right','species', 'countryCode', 'locality', 'stateProvince'])
+    # # select the features and labels
+    features = data.drop(columns=['decimalLongitude', 'decimalLatitude', 'individualCount', 'geometry'])
+    labels = data[['decimalLongitude', 'decimalLatitude', 'individualCount']]
+
+    # # split the data into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.2, random_state=42)
+
+    # # create a Random Forest regressor model
+    rf = RandomForestRegressor(n_estimators=100, random_state=42)
+
+    # # train the model
+    rf.fit(X_train, y_train)
+
+    # # make predictions on the testing set
+    y_pred = rf.predict(X_test)
+
+    # # calculate the mean squared error
+    mse = mean_squared_error(y_test, y_pred)
+    print("Mean Squared Error:", mse)
+
+    # # create a new GeoDataFrame with the predicted longitude and latitude
+    predictions = pd.DataFrame(y_pred, columns=['decimalLongitude', 'decimalLatitude', 'individualCount'])
+    geometry = gpd.points_from_xy(predictions['decimalLongitude'], predictions['decimalLatitude'])
+    predictions_gdf = gpd.GeoDataFrame(predictions, geometry=geometry)
+
+    # # plot the predicted points on a map
+    ax = data.plot(figsize=(10, 10), alpha=0.5, edgecolor='k')
+    predictions_gdf.plot(ax=ax, color='r', markersize=20)
+    plt.show()
+
+
+def filter_occurence_by_30_year(us_map: gpd.GeoDataFrame, occurence: pd.DataFrame, num: str):
     """
     Added a column in the given dataFrame that represents the (longitide, latitude) of the occurrences
     in a given year.

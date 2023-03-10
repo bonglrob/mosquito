@@ -16,7 +16,13 @@ def main() -> None:
     mosquito1 = m.get_df_m(m.get_path('Aedes_aegypti_occurrence.csv'))
     mosquito2 = m.get_df_m(m.get_path('Anopheles_quadrimaculatus_occurrence.csv'))
     mosquito3 = m.get_df_m(m.get_path('Culex_tarsalis_occurrence.csv'))
+    """
     # question 1
+    # mosquito1 = pd.read_csv(m.get_path('Occurrence_Aedes_aegypti.csv'))
+    # # filter data to only US
+    # is_US = mosquito1['countryCode'] == 'US'
+    # mosquito1 = mosquito1[is_US]
+
     # prepare map of US
     us_map = gpd.read_file(m.get_path('gz_2010_us_040_00_5m.json'))
     us_map = us_map[(us_map['NAME'] != 'Alaska') & (us_map['NAME'] != 'Hawaii')]
@@ -100,15 +106,9 @@ def main() -> None:
     fig.show()
 
     # question 3
-    city_data = m.generate_city_df()
-    # city_data.to_csv(m.get_path('city_data.csv'), index=False)
-    pop_df = m.combine_pop_df()
     # pop_df.to_csv(m.get_path('pop_all.csv'), index=False)
-    mosquito1_ca = m.filter_ca(mosquito1)
-    mosquito2_ca = m.filter_ca(mosquito2)
-    mosquito3_ca = m.filter_ca(mosquito3)
-
-    m.merge_all_data(mosquito1)
+    data = m.merge_all_data(mosquito1)
+    m.prediction(data)
 
     """
     # assign points to county !!
@@ -122,16 +122,16 @@ def main() -> None:
     # might use only July and August
     # testing: producing value
     # still have some problems...
-
+    
     ca_map = m.get_map_ca()
     geom3_ca = m.ca_geomosquito(mosquito3)
 
-    # fig, ax = plt.subplots(1, figsize=(15, 7))
-    # ca_map.plot(ax=ax, color='#EEEEEE', edgecolor='#FFFFFF')
+    fig, ax = plt.subplots(1, figsize=(15, 7))
+    ca_map.plot(ax=ax, color='#EEEEEE', edgecolor='#FFFFFF')
 
-    # county_with_m = gpd.sjoin(ca_map, geom3_ca, how='inner', op='intersects')
-    # county_with_m.plot(ax=ax)
-    # geom3_ca.plot(color='red', markersize=2, ax=ax)
+    county_with_m = gpd.sjoin(ca_map, geom3_ca, how='inner', op='intersects')
+    county_with_m.plot(ax=ax)
+    geom3_ca.plot(color='red', markersize=2, ax=ax)
 
     # plt.show()
     plt.close()
