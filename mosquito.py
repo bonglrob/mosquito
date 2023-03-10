@@ -397,7 +397,7 @@ def prediction(data):
     plt.show()
 
 
-def filter_occurence_by_30_year(us_map: gpd.GeoDataFrame, occurence: pd.DataFrame, num: str):
+def filter_occurrence_by_30_year(occurrence: pd.DataFrame, num: str):
     """
     Added a column in the given dataFrame that represents the (longitide, latitude) of the occurrences
     in a given year.
