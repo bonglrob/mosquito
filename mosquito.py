@@ -14,6 +14,9 @@ import matplotlib.pyplot as plt
 from typing import List
 from typing import Any
 from shapely.geometry import Point
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
 
 
 def get_path(filename: str) -> str:
@@ -70,6 +73,7 @@ def get_df_t(file_path: str) -> pd.DataFrame:
     data = pd.read_csv(file_path)
     data.columns = ["Date", "Temp", "Anomaly"]
     data = data.loc[4:, "Date":"Temp"]
+    data["Temp"] = data["Temp"].astype(float)
     return data
 
 
@@ -81,6 +85,7 @@ def get_df_p(file_path: str) -> pd.DataFrame:
     data = pd.read_csv(file_path)
     data.columns = ["Date", "Prec", "Anomaly"]
     data = data.loc[4:, "Date":"Prec"]
+    data["Prec"] = data["Prec"].astype(float)
     return data
 
 
@@ -248,7 +253,7 @@ def get_geometry(mdf: pd.DataFrame) -> pd.DataFrame:
     coordinates = zip(mdf['decimalLongitude'], mdf['decimalLatitude'])
     mdf['coordinates'] = [
         Point(lon, lat) for lon, lat in coordinates
-    ]
+    ].copy()
 
     # convert it to a geopandas
     mdf = gpd.GeoDataFrame(mdf, geometry='coordinates')
@@ -275,7 +280,8 @@ def ca_geomosquito(df: pd.DataFrame):
 def ca_occurrence(mosquito: pd.DataFrame):
     ca_map = get_map_ca()
     mosquito_ca = ca_geomosquito(mosquito)
-    merged = gpd.sjoin(ca_map, mosquito_ca, how='inner', op='intersects')
+    mosquito_ca.crs = "EPSG:4269"
+    merged = gpd.sjoin(ca_map, mosquito_ca, how='inner', predicate='intersects')
     columns_to_drop = ['STATEFP', 'COUNTYNS', 'AFFGEOID', 'GEOID']
     merged = merged.drop(columns_to_drop, axis=1)
     return merged
@@ -303,8 +309,8 @@ def get_capital(county: str) -> str:
     for group in groups:
         if county in group:
             capital = group[0]
-            if capital == 'Euraka':
-                return 'Humboldt'
+            if capital == 'Humboldt':
+                return 'Eureka'
             return capital
 
 
@@ -327,7 +333,7 @@ def merge_all_data(mosquito: pd.DataFrame):
     # print(len(gp_eureka) + len(gp_fresno) + len(gp_sacramento) + len(gp_sd) + len(gp_sf) + len(gp_la), "Counties")
     # print(len(set(gp_eureka + gp_fresno + gp_sacramento + gp_sd + gp_sf + gp_la)), "Counties")
 
-    occurrence = occurrence[occurrence['year'] != 2023.0]
+    occurrence = occurrence[(occurrence['year'] < 2023) & (occurrence['year'] > 1944)]
     occurrence = occurrence.reset_index(drop=True)
 
     for i in occurrence.index.tolist():
@@ -342,59 +348,86 @@ def merge_all_data(mosquito: pd.DataFrame):
         yyyymm = str(int(year))+add_0(month)
         temp = 'Temp_' + capital
         prec = 'Prec_' + capital
-        occurrence.loc[i, 'temperature'] = city_df.loc[city_df.loc[city_df['Date'] == yyyymm].index[0], temp]
-        occurrence.loc[i, 'precipitation'] = city_df.loc[city_df.loc[city_df['Date'] == yyyymm].index[0], prec]
+        occurrence.loc[i, 'temperature'] = float(city_df.loc[city_df.loc[city_df['Date'] == yyyymm].index[0], temp])
+        occurrence.loc[i, 'precipitation'] = float(city_df.loc[city_df.loc[city_df['Date'] == yyyymm].index[0], prec])
+    occurrence = occurrence.drop(columns=['COUNTYFP', 'index_right','species', 'countryCode', 'locality', 'stateProvince', 'geometry'])
     return occurrence
 
 
-def prediction(data):
+def prediction(data, depth=None, return_featues=False, new_prediction=False, new_features=None):
     """
     This function TBD
     """
-    # import necessary libraries
-    from sklearn.ensemble import RandomForestRegressor
-    # from sklearn.preprocessing import OneHotEncoder
-    from sklearn.model_selection import train_test_split
-    from sklearn.metrics import mean_squared_error
-    import geopandas as gpd
-    import pandas as pd
-
-    # encoder = OneHotEncoder(sparse=False)
-    # encoded_features = encoder.fit_transform(data[['NAME']])
     dummies = pd.get_dummies(data['NAME'])
     data = pd.concat([data, dummies], axis=1)
-    print(data.columns)
+    # print(data.columns)
     data.to_csv('prediction.csv', index=False)
-    data = data.drop(columns=[ 'NAME', 'index_right','species', 'countryCode', 'locality', 'stateProvince'])
-    # # select the features and labels
-    features = data.drop(columns=['decimalLongitude', 'decimalLatitude', 'individualCount', 'geometry'])
+    # data = data.drop(columns=['COUNTYFP', 'index_right','species', 'countryCode', 'locality', 'stateProvince', 'geometry'])
+    # select the features and labels
+    features = data.drop(columns=['decimalLongitude', 'decimalLatitude', 'individualCount', 'NAME'])
+    if return_featues:
+        return features
+    # print(features)
     labels = data[['decimalLongitude', 'decimalLatitude', 'individualCount']]
 
-    # # split the data into training and testing sets
-    X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.2, random_state=42)
+    # split the data into training and testing sets
+    feature_train, feature_test, label_train, label_test = train_test_split(features, labels, test_size=0.2, random_state=163)  # TODO
 
-    # # create a Random Forest regressor model
-    rf = RandomForestRegressor(n_estimators=100, random_state=42)
+    # create a Random Forest regressor model
+    rf = RandomForestRegressor(n_estimators=depth, random_state=163)  # TODO
 
-    # # train the model
-    rf.fit(X_train, y_train)
+    # train the model
+    rf.fit(feature_train, label_train)
 
-    # # make predictions on the testing set
-    y_pred = rf.predict(X_test)
+    # make predictions on the testing set
+    y_pred = rf.predict(feature_test)
 
-    # # calculate the mean squared error
-    mse = mean_squared_error(y_test, y_pred)
-    print("Mean Squared Error:", mse)
+    # calculate the mean squared error
+    mse = mean_squared_error(label_test, y_pred)
+    # print("Mean Squared Error:", mse)
 
-    # # create a new GeoDataFrame with the predicted longitude and latitude
+    # create a new GeoDataFrame with the predicted longitude and latitude
     predictions = pd.DataFrame(y_pred, columns=['decimalLongitude', 'decimalLatitude', 'individualCount'])
-    geometry = gpd.points_from_xy(predictions['decimalLongitude'], predictions['decimalLatitude'])
-    predictions_gdf = gpd.GeoDataFrame(predictions, geometry=geometry)
+    # geometry = gpd.points_from_xy(predictions['decimalLongitude'], predictions['decimalLatitude'])
+    # predictions_gdf = gpd.GeoDataFrame(predictions, geometry=)
+    predictions_gdf = get_geometry(predictions)
+    predictions_gdf.set_crs("EPSG:4269", inplace=True)
+    # print(predictions_gdf.crs)
+    # print(predictions_gdf)
 
-    # # plot the predicted points on a map
-    ax = data.plot(figsize=(10, 10), alpha=0.5, edgecolor='k')
-    predictions_gdf.plot(ax=ax, color='r', markersize=20)
+    # prediction with new features
+    if new_prediction:
+        new_pred = rf.predict(new_features)
+        new = pd.DataFrame(new_pred, columns=['decimalLongitude', 'decimalLatitude', 'individualCount'])
+        new_gdf = get_geometry(new)
+        new_gdf.set_crs("EPSG:4269", inplace=True)
+        return mse, predictions_gdf, new_gdf
+
+    return mse, predictions_gdf
+
+
+def plot_prediction(gdf, title):
+     # plot the predicted points on a map
+    fig, ax = plt.subplots(1)
+    ca_map = get_map_ca()
+    ca_map.plot(ax=ax, color='#EEEEEE', edgecolor='#FFFFFF')
+    sizes = gdf['individualCount'] * 10
+    gdf.plot(ax=ax, column='individualCount', cmap='coolwarm', markersize=sizes)
+    plt.title(title)
     plt.show()
+    plt.close()
+
+
+def decide_depth(df) -> int:
+    randoms = [i for i in range(1, 30)]
+    mses = []
+    for num in randoms:
+        mse, gdf = prediction(df, num)
+        mses.append(mse)
+    plt.plot(randoms, mses, 'ko-')
+    plt.show()
+    plt.close()
+    return randoms[mses.index(min(mses))]
 
 
 def filter_occurrence_by_30_year(occurrence: pd.DataFrame, num: str):
