@@ -45,6 +45,7 @@ def get_df_m(file_path: str) -> pd.DataFrame:
                      'decimalLatitude', 'decimalLongitude',
                      'month', 'year']
                     ]
+    data = data.dropna(subset=['year'])
     data["individualCount"] = data["individualCount"].fillna(1)
     data['month'] = data['month'].apply(to_int)
     data['year'] = data['year'].apply(to_int)
@@ -316,16 +317,16 @@ def filter_occurence_by_30_year(occurence: pd.DataFrame, num: str):
     occurrence['coordinates' + num] = [Point(lon, lat) for lon, lat in coordinates]
 
 
-def filter_us(occurence: pd.DataFrame):
-    """
-    Returns occurence dataset filtered by US
-    """
-    us_occurence = filter_ca(occurence)
-    is_1904 = us_occurence["year"] == 2014
-    new_df = us_occurence[is_1904]
-    print("df:", new_df)
-    # min_value = occurence["year"].min()
-    # us_occurence = us_occurence.loc[:, ["species", "individualCount", "month", "year"]]
-    # us_occurence = us_occurence["individualCount"].sum()
-    # print(min_value)
-    return us_occurence
+# def filter_us(occurence: pd.DataFrame):
+#     """
+#     Returns occurence dataset filtered by US
+#     """
+#     us_occurence = filter_ca(occurence)
+#     is_1904 = us_occurence["year"] == 2014
+#     new_df = us_occurence[is_1904]
+#     print("df:", new_df)
+#     # min_value = occurence["year"].min()
+#     # us_occurence = us_occurence.loc[:, ["species", "individualCount", "month", "year"]]
+#     # us_occurence = us_occurence["individualCount"].sum()
+#     # print(min_value)
+#     return us_occurence
