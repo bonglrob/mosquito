@@ -308,7 +308,7 @@ def merge_all_data(mosquito: pd.DataFrame):
     # print(len(set(gp_eureka + gp_fresno + gp_sacramento + gp_sd + gp_sf + gp_la)), "Counties")
 
 
-def filter_occurence_by_30_year(occurence: pd.DataFrame, num: str):
+def filter_occurrence_by_30_year(occurrence: pd.DataFrame, num: str):
     """
     Added a column in the given dataFrame that represents the (longitide, latitude) of the occurrences
     in a given year.
