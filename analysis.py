@@ -191,7 +191,7 @@ def main() -> None:
     title1 = "Aedes aegypti occurrence in California by prediction " + \
         "on test datasets"
     m.plot_prediction(prediction1, title1)
-    title2 = "Aedes aegypti occurrence in California in September 2050"
+    title2 = "Aedes aegypti occurrence prediction in California"
     m.plot_prediction(new1, title2)
     print()
 
@@ -234,7 +234,7 @@ def main() -> None:
     title3 = "Culex tarsalis occurrence in California by prediction" + \
         "on test datasets"
     m.plot_prediction(prediction3, title3)
-    title4 = "Culex tarsalis occurrence in California in September 2050"
+    title4 = "Culex tarsalis occurrence prediction in California"
     m.plot_prediction(new3, title4)
 
 
