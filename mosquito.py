@@ -437,18 +437,3 @@ def filter_occurrence_by_30_year(occurrence: pd.DataFrame, num: str):
     """
     coordinates = zip(occurrence['decimalLongitude'], occurrence['decimalLatitude'])
     occurrence['coordinates' + num] = [Point(lon, lat) for lon, lat in coordinates]
-
-
-# def filter_us(occurence: pd.DataFrame):
-#     """
-#     Returns occurence dataset filtered by US
-#     """
-#     us_occurence = filter_ca(occurence)
-#     is_1904 = us_occurence["year"] == 2014
-#     new_df = us_occurence[is_1904]
-#     print("df:", new_df)
-#     # min_value = occurence["year"].min()
-#     # us_occurence = us_occurence.loc[:, ["species", "individualCount", "month", "year"]]
-#     # us_occurence = us_occurence["individualCount"].sum()
-#     # print(min_value)
-#     return us_occurence

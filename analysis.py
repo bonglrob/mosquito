@@ -63,26 +63,39 @@ def main() -> None:
 
     # plt.show()
     plt.close()
+    """
 
+    # question 2 : Has there been a change of pattern for mosquitoes to thrive in certain months?
 
-    # question 2
+    # Copy aedes_species_occurence data
     aedes_species = mosquito1.copy()
-    # species2 = mosquito2.copy()
-    culex_species = mosquito3.copy() # https://www.wrbu.si.edu/vectorspecies/mosquitoes/tarsalis, Culex tarsalis Coquillett, 1896, usually tracked in
+    anopheles_species = mosquito2.copy()
+    culex_species = mosquito3.copy()
 
+    # Groupby count per month
     aedes_species_count = aedes_species.groupby(['year', 'month', 'species'])['individualCount'].sum().reset_index()
-    aedes_species_count['month'] = aedes_species_count['month'].apply(lambda x: calendar.month_name[int(x)])
-    # species2_count = species2.groupby(['year', 'species']).agg({'individualCount': 'sum'}).reset_index()
+    anopheles_species_count = anopheles_species.groupby(['year', 'month', 'species'])['individualCount'].sum().reset_index()
     culex_species_count = culex_species.groupby(['year', 'month', 'species'])['individualCount'].sum().reset_index()
-    culex_species_count['month'] = culex_species_count['month'].apply(lambda x: calendar.month_name[int(x)])
 
-    # all_species = pd.concat([aedes_species_count, culex_species_count]).reset_index(drop=True)
-    all_species = aedes_species_count.merge(culex_species_count, how='outer')
+    # Filter for 2002 - 2022:
+    is_years_2002_2022 = (aedes_species_count['year'] >= 2002) & (aedes_species_count['year'] <= 2022)
+    aedes_species_count = aedes_species_count[is_years_2002_2022]
+    is_years_2002_2022_2 = (anopheles_species_count['year'] >= 2002) & (anopheles_species_count['year'] <= 2022)
+    anopheles_species_count = anopheles_species_count[is_years_2002_2022_2]
+    is_years_2002_2022_3 = (culex_species_count['year'] >= 2002) & (culex_species_count['year'] <= 2022)
+    culex_species_count = culex_species_count[is_years_2002_2022_3]
 
-    # culex_species_count['individualCount'] = culex_species_count['individualCount'].diff()
+    # Change month into readable format for plot
+    aedes_species_count['month_name'] = aedes_species_count['month'].apply(lambda x: calendar.month_name[int(x)])
+    anopheles_species_count['month_name'] = anopheles_species_count['month'].apply(lambda x: calendar.month_name[int(x)])
+    culex_species_count['month_name'] = anopheles_species_count['month'].apply(lambda x: calendar.month_name[int(x)])
 
-    fig1 = px.bar(
-        all_species,
+    # Merge
+    aedes_anopheles_merge_df = pd.merge(aedes_species_count, anopheles_species_count, how='outer')
+    all_species_count = pd.merge(aedes_anopheles_merge_df, culex_species_count, how='outer')
+
+    fig1 = px.line(
+        all_species_count,
         x='month',
         y='individualCount',
         color='species',
@@ -93,12 +106,18 @@ def main() -> None:
         'species': 'Species'
         },
         animation_frame='year'
-        )
+    )
 
-    fig1.update_layout(updatemenus=[dict(type='buttons', showactive=False,
+    fig1.update_layout(
+        yaxis=dict(range=[0, all_species_count['individualCount'].max()]),
+        updatemenus=[dict(type='buttons', showactive=False,
                                    buttons=[dict(label='Play',
                                                  method='animate',
-                                                 args=[None, {'frame': {'duration': 1000, 'redraw': True}, 'fromcurrent': True, 'transition': {'duration': 0}}])])])
+                                                 args=[None, {'frame': {'duration': 1000, 'redraw': True}, 'fromcurrent': True, 'transition': {'duration': 0}}])])]
+    )
+
+    fig1.update_xaxes(ticktext=aedes_species_count['month_name'], tickvals=aedes_species_count['month'])
+
 
     fig1.show()
 
