@@ -537,3 +537,4 @@ def filter_occurrence_by_30_year(occurrence: pd.DataFrame, num: str):
                       occurrence['decimalLatitude'])
     occurrence['coordinates' + num] = \
         [Point(lon, lat) for lon, lat in coordinates]
+    return occurrence
