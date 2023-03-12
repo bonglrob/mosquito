@@ -307,6 +307,7 @@ def get_geometry(mdf: pd.DataFrame) -> pd.DataFrame:
         return None
     else:
         # coordinates column
+        mdf = mdf.copy()
         mdf.loc[:, 'coordinates'] = \
             mdf.apply(lambda row: Point(row['decimalLongitude'],
                                         row['decimalLatitude']), axis=1)
@@ -436,52 +437,8 @@ def merge_all_data(mosquito: pd.DataFrame) -> gpd.GeoDataFrame:
     return occurrence
 
 
-def generate_features(year=2022, month=7) -> pd.DataFrame:
-    """
-    This function takes a year(int) and month(int) and returns a feature
-    that can be used for the machine learning with the given year, month,
-    and the combined mosquito data from 2022.
-    """
-    # prepare all required datasets
-    ca_map = get_map_ca()
-    ca_map = ca_map.reset_index(drop=True)
-    city_df = generate_city_df()
-    city_df = city_df.reset_index(drop=True)
-    pop_df = combine_pop_df()
-
-    for i in ca_map.index.tolist():
-        # population
-        year = str(year)
-        county = ca_map.loc[i, 'NAME']
-        ca_map.loc[i, 'population'] = \
-            pop_df.loc[pop_df.loc[pop_df['County'] == county].index[0], year]
-
-        # temperature & precipitation
-        capital = get_capital(county)
-        if capital is not None:
-            month = month
-            yyyymm = str(int(year))+add_0(month)
-            temp = 'Temp_' + capital
-            prec = 'Prec_' + capital
-            ca_map.loc[i, 'temperature'] = \
-                float(city_df.loc[city_df.loc[city_df['Date'] ==
-                                              yyyymm].index[0], temp])
-            ca_map.loc[i, 'precipitation'] = \
-                float(city_df.loc[city_df.loc[city_df['Date'] ==
-                                              yyyymm].index[0], prec])
-
-    # year and month
-    ca_map['year'] = year
-    ca_map['month'] = month
-
-    ca_map = ca_map.drop(columns=['NAME', 'COUNTYFP', 'STATEFP', 'COUNTYNS',
-                                  'AFFGEOID', 'GEOID', 'geometry'])
-    ca_map = ca_map.dropna()
-    return ca_map
-
-
 def prediction(data: gpd.GeoDataFrame, depth=None, new_prediction=False,
-               new_features=None, random=163) -> Any:
+               new_features=None, random=163, return_features=False) -> Any:
     """
     This function takes a GeoDataFrame with mosquito occurrence, population,
     temperature, precipitation etc., for each county in California,
@@ -491,6 +448,9 @@ def prediction(data: gpd.GeoDataFrame, depth=None, new_prediction=False,
     # select features and labels
     features = data.drop(columns=['decimalLongitude', 'decimalLatitude',
                                   'individualCount', 'NAME'])
+    # return new features
+    if return_features:
+        return features
     labels = data[['decimalLongitude', 'decimalLatitude', 'individualCount']]
 
     # split the data into training and testing sets
@@ -572,6 +532,7 @@ def filter_occurrence_by_30_year(occurrence: pd.DataFrame, num: str):
     Added a column in the given dataFrame that represents the (longitide,
     latitude) of the occurrences in a given year.
     """
+    occurrence = occurrence.copy()
     coordinates = zip(occurrence['decimalLongitude'],
                       occurrence['decimalLatitude'])
     occurrence['coordinates' + num] = \

@@ -35,7 +35,7 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import plotly.express as px
 import calendar
-import warnings
+import pandas as pd
 
 
 def main() -> None:
@@ -63,10 +63,14 @@ def main() -> None:
     occurrence_64_93 = mosquito1[btn_64_93]
     occurrence_94_23 = mosquito1[btn_94_23]
 
-    m.filter_occurrence_by_30_year(occurrence_04_33, '1')
-    m.filter_occurrence_by_30_year(occurrence_34_63, '2')
-    m.filter_occurrence_by_30_year(occurrence_64_93, '3')
-    m.filter_occurrence_by_30_year(occurrence_94_23, '4')
+    occurrence_04_33 =\
+        m.filter_occurrence_by_30_year(occurrence_04_33, '1')
+    occurrence_34_63 =\
+        m.filter_occurrence_by_30_year(occurrence_34_63, '2')
+    occurrence_64_93 =\
+        m.filter_occurrence_by_30_year(occurrence_64_93, '3')
+    occurrence_94_23 =\
+        m.filter_occurrence_by_30_year(occurrence_94_23, '4')
 
     fig, [[ax1, ax2], [ax3, ax4]] = plt.subplots(2, 2, figsize=(20, 10))
     us_map.plot(color='#EEEEEE', edgecolor='#FFFFFF', ax=ax1)
@@ -100,7 +104,6 @@ def main() -> None:
 
     plt.show()
     plt.close()
-    """
 
     # question 2 : Has there been a change of pattern for mosquitoes to thrive in certain months?
 
@@ -155,64 +158,84 @@ def main() -> None:
 
     fig1.update_xaxes(ticktext=aedes_species_count['month_name'], tickvals=aedes_species_count['month'])
 
-
     fig1.show()
 
-    # question 3
-    # TODO: edit new features if you want
-    year = 2022
-    month = 9
-    new_features = m.generate_features(year=year, month=month)
-    new_features['population'] = new_features['population'] + 10000
-    new_features['year'] = new_features['year'].apply(int) + 28
-    new_features['temperature'] = new_features['temperature'] + 5
-    new_features['precipitation'] = new_features['precipitation'] + 1
+    # question 3: Mosquito occurrence prediction
     # Aedes aegypti
     print("Aedes aegypti")
     print()
+
+    # read DataFrame to GeoDataFrame
     past1 = m.ca_geomosquito(mosquito1)
     data1 = m.merge_all_data(mosquito1)
     print(data1.head())
     print()
 
+    # Decide the depth of trees
     min_error1 = m.decide_depth(data1)
 
+    # TODO: edit new features if you want
+    new_features1 = m.prediction(data1, min_error1, return_features=True)
+    new_features1['population'] = new_features1['population'] + 10000
+    new_features1['year'] = new_features1['year'].apply(int) + 50
+    new_features1['temperature'] = new_features1['temperature'] + 5
+    new_features1['precipitation'] = new_features1['precipitation'] + 1
+
+    # plot dataset and prediction
     mse1, prediction1, new1 = \
         m.prediction(data1, min_error1, new_prediction=True,
-                     new_features=new_features)
+                     new_features=new_features1)
     print("Mean Squared Error:", mse1)
     print()
     m.plot_prediction(past1, "Aedes aegypti occurrence in California in total")
-    m.plot_prediction(prediction1,
-                      "Aedes aegypti occurrence in California by prediction on test datasets")
-    m.plot_prediction(new1, "Aedes aegypti occurrence in California in September 2050")
+    title1 = "Aedes aegypti occurrence in California by prediction " + \
+        "on test datasets"
+    m.plot_prediction(prediction1, title1)
+    title2 = "Aedes aegypti occurrence in California in September 2050"
+    m.plot_prediction(new1, title2)
     print()
 
     # Anopheles quadrimaculatus
     print("Anopheles quadrimaculatus")
     print()
+
+    # read DataFrame to GeoDataFrame
     m.ca_geomosquito(mosquito2)
     print()
 
     # Culex tarsalis
     print("Culex tarsalis")
     print()
+
+    # read DataFrame to GeoDataFrame
     past3 = m.ca_geomosquito(mosquito3)
     data3 = m.merge_all_data(mosquito3)
     print(data3.head())
     print()
 
+    # Decide the depth of trees
     min_error3 = m.decide_depth(data3, 999)
 
+    # TODO: edit new features if you want
+    new_features3 = m.prediction(data3, min_error1, return_features=True)
+    new_features3['population'] = new_features3['population'] + 10000
+    new_features3['year'] = new_features3['year'].apply(int) + 50
+    new_features3['temperature'] = new_features3['temperature'] + 5
+    new_features3['precipitation'] = new_features3['precipitation'] + 1
+
+    # plot dataset and prediction
     mse3, prediction3, new3 = \
         m.prediction(data3, min_error3, new_prediction=True,
-                     new_features=new_features, random=999)
+                     new_features=new_features3, random=999)
     print("Mean Squared Error:", mse3)
     print()
     m.plot_prediction(past3,
                       "Culex tarsalis occurrence in California in total")
-    m.plot_prediction(prediction3, "Culex tarsalis occurrence in California by prediction on test datasets")
-    m.plot_prediction(new3, "Culex tarsalis occurrence in California in September 2050")
+    title3 = "Culex tarsalis occurrence in California by prediction" + \
+        "on test datasets"
+    m.plot_prediction(prediction3, title3)
+    title4 = "Culex tarsalis occurrence in California in September 2050"
+    m.plot_prediction(new3, title4)
 
 
 if __name__ == '__main__':
