@@ -18,8 +18,8 @@ def main() -> None:
     mosquito3 = m.get_df_m(m.get_path('Culex_tarsalis_occurrence.csv'))
     # question 1
     # prepare map of US
-    us_map = gpd.read_file(m.get_path('gz_2010_us_040_00_5m.json'))
-    us_map = us_map[(us_map['NAME'] != 'Alaska') & (us_map['NAME'] != 'Hawaii')]
+    # us_map = gpd.read_file(m.get_path('gz_2010_us_040_00_5m.json'))
+    # us_map = us_map[(us_map['NAME'] != 'Alaska') & (us_map['NAME'] != 'Hawaii')]
 
     # 1904 - 2023
     # btn_04_33 = (mosquito1['year'] >= 1904) & (mosquito1['year'] <= 1933)
@@ -65,39 +65,41 @@ def main() -> None:
 
 
     # question 2
-    # species1 = mosquito1.copy()
+    aedes_species = mosquito1.copy()
     # species2 = mosquito2.copy()
     culex_species = mosquito3.copy() # https://www.wrbu.si.edu/vectorspecies/mosquitoes/tarsalis, Culex tarsalis Coquillett, 1896, usually tracked in
 
-    # species1_count = species1.groupby('year').agg({'individualCount': 'sum', 'species': 'first'}).reset_index()
+    aedes_species_count = aedes_species.groupby(['year', 'month', 'species'])['individualCount'].sum().reset_index()
+    aedes_species_count['month'] = aedes_species_count['month'].apply(lambda x: calendar.month_name[int(x)])
     # species2_count = species2.groupby(['year', 'species']).agg({'individualCount': 'sum'}).reset_index()
-    culex_species_count = culex_species.groupby(['year', 'month'])['individualCount'].sum().reset_index()
+    culex_species_count = culex_species.groupby(['year', 'month', 'species'])['individualCount'].sum().reset_index()
     culex_species_count['month'] = culex_species_count['month'].apply(lambda x: calendar.month_name[int(x)])
 
-    # all_mosquitoes = pd.concat([species1_count, species2_count, species3_count]).reset_index(drop=True)
+    # all_species = pd.concat([aedes_species_count, culex_species_count]).reset_index(drop=True)
+    all_species = aedes_species_count.merge(culex_species_count, how='outer')
 
-    culex_species_count['individualCount'] = culex_species_count['individualCount'].diff()
+    # culex_species_count['individualCount'] = culex_species_count['individualCount'].diff()
 
-    fig = px.bar(
-        culex_species_count,
+    fig1 = px.bar(
+        all_species,
         x='month',
         y='individualCount',
-        # color='species',
+        color='species',
         title='Monthly Count by Species',
         labels={
-        'count': 'Count',
+        'individualCount': 'Count',
         'month': 'Month',
         'species': 'Species'
         },
         animation_frame='year'
         )
 
-    fig.update_layout(updatemenus=[dict(type='buttons', showactive=False,
+    fig1.update_layout(updatemenus=[dict(type='buttons', showactive=False,
                                    buttons=[dict(label='Play',
                                                  method='animate',
                                                  args=[None, {'frame': {'duration': 1000, 'redraw': True}, 'fromcurrent': True, 'transition': {'duration': 0}}])])])
 
-    fig.show()
+    fig1.show()
 
     # question 3
     city_data = m.generate_city_df()
