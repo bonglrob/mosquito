@@ -39,8 +39,6 @@ import warnings
 
 
 def main() -> None:
-    warnings.filterwarnings('ignore')
-
     # read data
     mosquito1 = m.get_df_m(m.get_path('Aedes_aegypti_occurrence.csv'))
     mosquito2 = \
@@ -197,7 +195,6 @@ def main() -> None:
                       "Culex tarsalis occurrence in California in total")
     m.plot_prediction(prediction3, "Culex tarsalis occurrence in California by prediction on test datasets")
     m.plot_prediction(new3, "Culex tarsalis occurrence in California in September 2050")
-    warnings.resetwarnings()
 
 
 if __name__ == '__main__':
