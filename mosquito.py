@@ -1,19 +1,38 @@
 """
 CSE 163 Final Project
-Kyoko Kurihara, Robert Bonglamphone, Name here?
+Kyoko Kurihara, Robert Bonglamphone, Christine Cai
 
-This file implements functions for mosquito prediction. ...
+This file contains functions for analyzing mosquito occurrence.
+It is not a runnable code.
+
+1. The code converts three mosquito occurrence CSV datasets to a GeoDataFrame
+   with latitude and longitude information.
+
+2. In order to write a GeoDataFrame
+   for machine learning purposes, the code changes the formats of population,
+   temperature, and precipitation files, and combines them all
+   with the mosquito occurrence GeoPandaDataFrame.
+    - For the population datasets, it writes a new DataFrame by cleaning up
+      seven CSV files.
+    - For temperature and precipitation datasets, it writes
+      a new DataFrame with 12 CSV files.
+
+3. The machine learning part uses:
+    - features: 'population', 'temperature', 'precipitation', 'location', etc.
+    - lables: mosquito occurrence 'latitude', 'longitude', 'individual counts'
+
+   It trains a Random Forest regressor model.
+
+4. The prediction results are then plotted for each mosquito species.
 """
 
 import os
 import pandas as pd
 from shapely.geometry import Point
-import numpy as np
 import geopandas as gpd
 import matplotlib.pyplot as plt
 from typing import List
 from typing import Any
-from shapely.geometry import Point
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
@@ -21,12 +40,16 @@ from sklearn.metrics import mean_squared_error
 
 def get_path(filename: str) -> str:
     """
-    This function takes a file name and returns the file path.
+    This function takes a file name (str) and returns the file path (str).
     """
     return os.path.join('./dataset', filename)
 
 
-def to_int(x: Any):
+def to_int(x: Any) -> Any:
+    """
+    This function takes a number and converts it into an integer
+    if it is not Nan.
+    """
     if pd.notna(x):
         return int(str(x).split('.')[0])
     else:
@@ -35,10 +58,9 @@ def to_int(x: Any):
 
 def get_df_m(file_path: str) -> pd.DataFrame:
     """
-    This function takes a file name (str) of one of mosquito occurrence
-    datasets and returns the dataframe.
+    This function takes a file name (str) of mosquito occurrence
+    dataset and returns it as a DataFrame.
     """
-    # is there any other way "low_memory=False"
     data = pd.read_csv(file_path, delimiter='\t', low_memory=False)
     # select columns
     data = data.loc[data['countryCode'] == 'US',
@@ -47,28 +69,19 @@ def get_df_m(file_path: str) -> pd.DataFrame:
                      'decimalLatitude', 'decimalLongitude',
                      'month', 'year']
                     ]
+    # edit DataFrame
     data = data.dropna(subset=['year'])
+    # fill Nan in "individual count" with 1
     data["individualCount"] = data["individualCount"].fillna(1)
     data['month'] = data['month'].apply(to_int)
     data['year'] = data['year'].apply(to_int)
     return data
 
 
-def filter_ca(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    This function takes a mosquito occurrence
-    dataframes and returns the dataframe only with rows including CA.
-    """
-    # filter rows
-    mask = df['stateProvince'] == 'California'
-    return df[mask]
-
-
-
 def get_df_t(file_path: str) -> pd.DataFrame:
     """
     This function takes a file name (str) of one of temperature datasets
-    and returns the dataframe.
+    and converts it to a DataFrame.
     """
     data = pd.read_csv(file_path)
     data.columns = ["Date", "Temp", "Anomaly"]
@@ -80,7 +93,7 @@ def get_df_t(file_path: str) -> pd.DataFrame:
 def get_df_p(file_path: str) -> pd.DataFrame:
     """
     This function takes a file name (str) of one of precipitation datasets
-    and returns the file in dataframe format.
+    and converts it to a DataFrame.
     """
     data = pd.read_csv(file_path)
     data.columns = ["Date", "Prec", "Anomaly"]
@@ -91,8 +104,8 @@ def get_df_p(file_path: str) -> pd.DataFrame:
 
 def generate_city_df() -> pd.DataFrame:
     """
-    This function returns a dataframe where all datasets on city tempereature
-    and precipitation are combined.
+    This function returns a DataFrame which combines all city tempereature
+    and precipitation datasets.
     """
     cities = ["Eureka", "Fresno", "Los Angeles", "Sacramento",
               "San Diego", "San Francisco"]
@@ -122,7 +135,11 @@ def generate_city_df() -> pd.DataFrame:
     return result
 
 
-def get_df_pop(file_name, sheetname=None):
+def get_df_pop(file_name: str, sheetname=None) -> pd.DataFrame:
+    """
+    This function takes a file name of population datasets and converts
+    it into a DataFrame.
+    """
     if sheetname is None:
         data = pd.DataFrame(pd.read_excel(file_name))
     if sheetname is not None:
@@ -130,7 +147,10 @@ def get_df_pop(file_name, sheetname=None):
     return data
 
 
-def pop50():
+def pop50() -> pd.DataFrame:
+    """
+    This function reads 'popca_4769.xlsx' and returns its cleaned-up DataFrame.
+    """
     # 1947-1970 data
     pop4769 = get_df_pop(get_path('popca_4769.xlsx'))
     pop4769 = pop4769.loc[2:59, :]
@@ -143,8 +163,11 @@ def pop50():
     return pop4769
 
 
-def combine_pop_df():
-    # TODO: one of file divided by hand, which needs to be fixed quickly
+def combine_pop_df() -> pd.DataFrame:
+    """
+    This funciton combines all population DataFrames and cleans it up.
+    """
+    # read files
     pop70 = clean_up_pop_df('popca_7080.xlsx', 15, 9)
     pop80 = clean_up_pop_df('popca_8090.xlsx', 15, 9)
     pop90 = clean_up_pop_df('popca_9000.xlsx', 15, 9)
@@ -165,19 +188,30 @@ def combine_pop_df():
     pop_10 = change_style(pop10)
     pop_20 = change_style(pop20)
 
-    # merge
-    pop_all = pop_50.merge(pop_70, left_on='County', right_on='County', how='left')
-    pop_all = pop_all.merge(pop_80, left_on='County', right_on='County', how='left')
-    pop_all = pop_all.merge(pop_90, left_on='County', right_on='County', how='left')
-    pop_all = pop_all.merge(pop_00, left_on='County', right_on='County', how='left')
-    pop_all = pop_all.merge(pop_10, left_on='County', right_on='County', how='left')
-    pop_all = pop_all.merge(pop_20, left_on='County', right_on='County', how='left')
+    # merge DataFrames
+    pop_all = pop_50.merge(pop_70, left_on='County', right_on='County',
+                           how='left')
+    pop_all = pop_all.merge(pop_80, left_on='County', right_on='County',
+                            how='left')
+    pop_all = pop_all.merge(pop_90, left_on='County', right_on='County',
+                            how='left')
+    pop_all = pop_all.merge(pop_00, left_on='County', right_on='County',
+                            how='left')
+    pop_all = pop_all.merge(pop_10, left_on='County', right_on='County',
+                            how='left')
+    pop_all = pop_all.merge(pop_20, left_on='County', right_on='County',
+                            how='left')
 
-    # print(pop_all)
+    # edit columns
+    pop_all.columns = pop_all.columns.astype(str)
     return pop_all
 
 
 def change_style(pop: pd.DataFrame) -> pd.DataFrame:
+    """
+    This function takes a population DataFrame and changes its styles so that
+    it has county name on the 1st column and years as columns name.
+    """
     result = {}
     result['County'] = []
 
@@ -198,7 +232,7 @@ def change_style(pop: pd.DataFrame) -> pd.DataFrame:
 
 def column_name(df: pd.DataFrame) -> List[str]:
     """
-    This takes a dataframe and returns the dataframe with modified column name.
+    This takes a DataFrame and returns the DataFrame with modified column name.
     """
     column_list = df.columns.tolist()
     column_list[0] = 'County'
@@ -207,10 +241,11 @@ def column_name(df: pd.DataFrame) -> List[str]:
     return column_list
 
 
-def clean_up_pop_df(filename: str, start_id: int, interval: int, sheetname=None):
+def clean_up_pop_df(filename: str, start_id: int, interval: int,
+                    sheetname=None):
     """
-    This function takes 1970-99 population dataset and returns cleaned up dataset
-    with columns 'County', 'Year', 'Population'.
+    This function takes 1970-2022 population dataset and cleans up the dataset
+    so that is has columns 'County', 'Year', and 'Population'.
     """
     # import .xlsx file as .csv
     pop_df = get_df_pop(get_path(filename), sheetname=sheetname)
@@ -218,21 +253,24 @@ def clean_up_pop_df(filename: str, start_id: int, interval: int, sheetname=None)
     pop_df = pop_df.loc[start_id:, ['County', 'Year', 'Population']]
 
     # find rows with value in column 'County'
-    na_series = pop_df.isna()['County']
+    na_edit = pop_df.fillna('blank')['County'].copy()
+
     for i in range(start_id + 2, len(pop_df.axes[0])+start_id):
-        if (na_series[i - 2] == False) and (na_series[i - 1] == False) and (na_series[i] == False):
-            na_series[i] = True
-        if (na_series[i - 1] == False) and (na_series[i] == False):
-            na_series[i] = True
-    na_series.iloc[-5:] = True
-    false_rows = na_series[na_series == False]
-    county_indexes = false_rows.index.tolist()
+        if (na_edit[i - 2] != 'blank') and \
+           (na_edit[i - 1] != 'blank') and \
+           (na_edit[i] != 'blank'):
+            na_edit[i] = 'blank'
+        if (na_edit[i - 1] != 'blank') and (na_edit[i] != 'blank'):
+            na_edit[i] = 'blank'
+    na_edit.iloc[-5:] = 'blank'
+    county_indexes = na_edit[na_edit != 'blank'].index.to_list()
 
     # fill column 'County'
     for i in county_indexes:
         if type(pop_df.loc[i+1, 'County']) == str:
-            pop_df.loc[i:i+interval, 'County'] = (str(pop_df.loc[i, 'County']) +
-                                           " " + str(pop_df.loc[i+1, 'County'])).replace("  ", " ")
+            pop_df.loc[i:i+interval, 'County'] = \
+                (str(pop_df.loc[i, 'County']) + " " +
+                 str(pop_df.loc[i+1, 'County'])).replace("  ", " ")
 
         else:
             pop_df.loc[i:i+interval, 'County'] = str(pop_df.loc[i, 'County'])
@@ -245,22 +283,40 @@ def clean_up_pop_df(filename: str, start_id: int, interval: int, sheetname=None)
     return pop_df
 
 
+def filter_ca(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    This function takes a mosquito occurrence DataFrame and returns
+    only California data.
+    """
+    # filter rows
+    mask = df['stateProvince'] == 'California'
+    result = df[mask]
+    # if there is no occurrence in California
+    if result.empty:
+        print("No occurrence in California")
+        return None
+    else:
+        return result
+
+
 def get_geometry(mdf: pd.DataFrame) -> pd.DataFrame:
     """
     This functino takes mosquito dataset and converts it into GeoDataFrame.
     """
-    # coordinates column
-    coordinates = zip(mdf['decimalLongitude'], mdf['decimalLatitude'])
-    mdf['coordinates'] = [
-        Point(lon, lat) for lon, lat in coordinates
-    ].copy()
+    if mdf is None:
+        return None
+    else:
+        # coordinates column
+        mdf.loc[:, 'coordinates'] = \
+            mdf.apply(lambda row: Point(row['decimalLongitude'],
+                                        row['decimalLatitude']), axis=1)
 
-    # convert it to a geopandas
-    mdf = gpd.GeoDataFrame(mdf, geometry='coordinates')
-    return mdf
+        # convert it to a geopandas
+        mdf = gpd.GeoDataFrame(mdf, geometry='coordinates')
+        return mdf
 
 
-def get_map_ca():
+def get_map_ca() -> gpd.GeoDataFrame:
     """
     This function returns US map GeoDataFrame.
     """
@@ -269,19 +325,29 @@ def get_map_ca():
     return gdf
 
 
-def ca_geomosquito(df: pd.DataFrame):
+def ca_geomosquito(df: pd.DataFrame) -> gpd.GeoDataFrame:
     """
-    This function takes DataFrame and returns filtered GeoDataFrame.
+    This function takes a DataFrame and returns filtered GeoDataFrame
+    with California data.
     """
-    result = get_geometry(filter_ca(df))
-    return result
+    # if DataFrame is empty
+    if df is None:
+        print("No occurrence in California")
+    else:
+        filtered = filter_ca(df)
+        result = get_geometry(filtered)
+        return result
 
 
-def ca_occurrence(mosquito: pd.DataFrame):
+def ca_occurrence(mosquito: pd.DataFrame) -> gpd.GeoDataFrame:
+    # import California map
     ca_map = get_map_ca()
+    # read occurrence dataset
     mosquito_ca = ca_geomosquito(mosquito)
     mosquito_ca.crs = "EPSG:4269"
-    merged = gpd.sjoin(ca_map, mosquito_ca, how='inner', predicate='intersects')
+    # merge datasets
+    merged = gpd.sjoin(ca_map, mosquito_ca, how='inner',
+                       predicate='intersects')
     columns_to_drop = ['STATEFP', 'COUNTYNS', 'AFFGEOID', 'GEOID']
     merged = merged.drop(columns_to_drop, axis=1)
     return merged
@@ -289,7 +355,8 @@ def ca_occurrence(mosquito: pd.DataFrame):
 
 def get_capital(county: str) -> str:
     """
-    This funciton takes a county name (str) and returns the capital city that the county belongs to.
+    This funciton takes a county name (str) and returns the capital city
+    that the county belongs to.
     """
     gp_eureka = ["Humboldt", "Del Norte", "Lake", "Mendocino", "Modoc",
                  "Shasta", "Siskiyou", "Tahama", "Trinity"]
@@ -312,11 +379,13 @@ def get_capital(county: str) -> str:
             if capital == 'Humboldt':
                 return 'Eureka'
             return capital
+    return None
 
 
 def add_0(num: float) -> str:
     """
-    This function takes a number between 1 to 12 and returns it in a format of 'XX'.
+    This function takes a number between 1 to 12 and
+    returns it in a format of '0X' or '1X'.
     """
     if num < 10:
         result = '0' + str(int(num))
@@ -325,22 +394,28 @@ def add_0(num: float) -> str:
     return result
 
 
-def merge_all_data(mosquito: pd.DataFrame):
+def merge_all_data(mosquito: pd.DataFrame) -> gpd.GeoDataFrame:
+    """
+    This function takes mosquito occurrence Dataframe and merges it
+    with population, temperature, precipitation datasets.
+    The returned GeoDataFrame will be used for machine learning.
+    """
+    # prepare all required datasets
     occurrence = ca_occurrence(mosquito)
     city_df = generate_city_df()
     city_df = city_df.reset_index(drop=True)
     pop_df = combine_pop_df()
-    # print(len(gp_eureka) + len(gp_fresno) + len(gp_sacramento) + len(gp_sd) + len(gp_sf) + len(gp_la), "Counties")
-    # print(len(set(gp_eureka + gp_fresno + gp_sacramento + gp_sd + gp_sf + gp_la)), "Counties")
 
-    occurrence = occurrence[(occurrence['year'] < 2023) & (occurrence['year'] > 1944)]
+    occurrence = occurrence[(occurrence['year'] < 2023) &
+                            (occurrence['year'] > 1946)]
     occurrence = occurrence.reset_index(drop=True)
 
     for i in occurrence.index.tolist():
         # population
-        year = occurrence.loc[i, 'year']
+        year = str(int(occurrence.loc[i, 'year']))
         county = occurrence.loc[i, 'NAME']
-        occurrence.loc[i, 'population'] = pop_df.loc[pop_df.loc[pop_df['County'] == county].index[0], int(year)]
+        occurrence.loc[i, 'population'] = \
+            pop_df.loc[pop_df.loc[pop_df['County'] == county].index[0], year]
 
         # temperature & precipitation
         capital = get_capital(county)
@@ -348,33 +423,82 @@ def merge_all_data(mosquito: pd.DataFrame):
         yyyymm = str(int(year))+add_0(month)
         temp = 'Temp_' + capital
         prec = 'Prec_' + capital
-        occurrence.loc[i, 'temperature'] = float(city_df.loc[city_df.loc[city_df['Date'] == yyyymm].index[0], temp])
-        occurrence.loc[i, 'precipitation'] = float(city_df.loc[city_df.loc[city_df['Date'] == yyyymm].index[0], prec])
-    occurrence = occurrence.drop(columns=['COUNTYFP', 'index_right','species', 'countryCode', 'locality', 'stateProvince', 'geometry'])
+        occurrence.loc[i, 'temperature'] = \
+            float(city_df.loc[city_df.loc[city_df['Date'] == yyyymm].index[0],
+                              temp])
+        occurrence.loc[i, 'precipitation'] = \
+            float(city_df.loc[city_df.loc[city_df['Date'] == yyyymm].index[0],
+                              prec])
+    occurrence = occurrence.drop(columns=['COUNTYFP', 'index_right', 'species',
+                                          'countryCode', 'locality',
+                                          'stateProvince', 'geometry'])
+    occurrence = occurrence.dropna()
     return occurrence
 
 
-def prediction(data, depth=None, return_featues=False, new_prediction=False, new_features=None):
+def generate_features(year=2022, month=7) -> pd.DataFrame:
     """
-    This function TBD
+    This function takes a year(int) and month(int) and returns a feature
+    that can be used for the machine learning with the given year, month,
+    and the combined mosquito data from 2022.
     """
-    dummies = pd.get_dummies(data['NAME'])
-    data = pd.concat([data, dummies], axis=1)
-    # print(data.columns)
-    data.to_csv('prediction.csv', index=False)
-    # data = data.drop(columns=['COUNTYFP', 'index_right','species', 'countryCode', 'locality', 'stateProvince', 'geometry'])
-    # select the features and labels
-    features = data.drop(columns=['decimalLongitude', 'decimalLatitude', 'individualCount', 'NAME'])
-    if return_featues:
-        return features
-    # print(features)
+    # prepare all required datasets
+    ca_map = get_map_ca()
+    ca_map = ca_map.reset_index(drop=True)
+    city_df = generate_city_df()
+    city_df = city_df.reset_index(drop=True)
+    pop_df = combine_pop_df()
+
+    for i in ca_map.index.tolist():
+        # population
+        year = str(year)
+        county = ca_map.loc[i, 'NAME']
+        ca_map.loc[i, 'population'] = \
+            pop_df.loc[pop_df.loc[pop_df['County'] == county].index[0], year]
+
+        # temperature & precipitation
+        capital = get_capital(county)
+        if capital is not None:
+            month = month
+            yyyymm = str(int(year))+add_0(month)
+            temp = 'Temp_' + capital
+            prec = 'Prec_' + capital
+            ca_map.loc[i, 'temperature'] = \
+                float(city_df.loc[city_df.loc[city_df['Date'] ==
+                                              yyyymm].index[0], temp])
+            ca_map.loc[i, 'precipitation'] = \
+                float(city_df.loc[city_df.loc[city_df['Date'] ==
+                                              yyyymm].index[0], prec])
+
+    # year and month
+    ca_map['year'] = year
+    ca_map['month'] = month
+
+    ca_map = ca_map.drop(columns=['NAME', 'COUNTYFP', 'STATEFP', 'COUNTYNS',
+                                  'AFFGEOID', 'GEOID', 'geometry'])
+    ca_map = ca_map.dropna()
+    return ca_map
+
+
+def prediction(data: gpd.GeoDataFrame, depth=None, new_prediction=False,
+               new_features=None, random=163) -> Any:
+    """
+    This function takes a GeoDataFrame with mosquito occurrence, population,
+    temperature, precipitation etc., for each county in California,
+    and predicts latitude, longitude, and individual count of
+    mosquito occurences by training a Random Forest regressor model.
+    """
+    # select features and labels
+    features = data.drop(columns=['decimalLongitude', 'decimalLatitude',
+                                  'individualCount', 'NAME'])
     labels = data[['decimalLongitude', 'decimalLatitude', 'individualCount']]
 
     # split the data into training and testing sets
-    feature_train, feature_test, label_train, label_test = train_test_split(features, labels, test_size=0.2, random_state=163)  # TODO
+    feature_train, feature_test, label_train, label_test = \
+        train_test_split(features, labels, test_size=0.2, random_state=random)
 
     # create a Random Forest regressor model
-    rf = RandomForestRegressor(n_estimators=depth, random_state=163)  # TODO
+    rf = RandomForestRegressor(n_estimators=depth, random_state=random)
 
     # train the model
     rf.fit(feature_train, label_train)
@@ -384,21 +508,20 @@ def prediction(data, depth=None, return_featues=False, new_prediction=False, new
 
     # calculate the mean squared error
     mse = mean_squared_error(label_test, y_pred)
-    # print("Mean Squared Error:", mse)
 
     # create a new GeoDataFrame with the predicted longitude and latitude
-    predictions = pd.DataFrame(y_pred, columns=['decimalLongitude', 'decimalLatitude', 'individualCount'])
-    # geometry = gpd.points_from_xy(predictions['decimalLongitude'], predictions['decimalLatitude'])
-    # predictions_gdf = gpd.GeoDataFrame(predictions, geometry=)
+    predictions = pd.DataFrame(y_pred, columns=['decimalLongitude',
+                                                'decimalLatitude',
+                                                'individualCount'])
     predictions_gdf = get_geometry(predictions)
     predictions_gdf.set_crs("EPSG:4269", inplace=True)
-    # print(predictions_gdf.crs)
-    # print(predictions_gdf)
 
-    # prediction with new features
+    # make predictions on the new features
     if new_prediction:
         new_pred = rf.predict(new_features)
-        new = pd.DataFrame(new_pred, columns=['decimalLongitude', 'decimalLatitude', 'individualCount'])
+        new = pd.DataFrame(new_pred, columns=['decimalLongitude',
+                                              'decimalLatitude',
+                                              'individualCount'])
         new_gdf = get_geometry(new)
         new_gdf.set_crs("EPSG:4269", inplace=True)
         return mse, predictions_gdf, new_gdf
@@ -406,25 +529,39 @@ def prediction(data, depth=None, return_featues=False, new_prediction=False, new
     return mse, predictions_gdf
 
 
-def plot_prediction(gdf, title):
-     # plot the predicted points on a map
+def plot_prediction(gdf: gpd.GeoDataFrame, title: str) -> None:
+    """
+    This function takes a GeoDataFrame of mosquito occurence and plots it
+    on a California map.
+    """
     fig, ax = plt.subplots(1)
+    # plot a CA map
     ca_map = get_map_ca()
     ca_map.plot(ax=ax, color='#EEEEEE', edgecolor='#FFFFFF')
-    sizes = gdf['individualCount'] * 10
-    gdf.plot(ax=ax, column='individualCount', cmap='coolwarm', markersize=sizes)
+    # plot the predicted points on a map
+    sizes = gdf['individualCount']
+    gdf.plot(ax=ax, column='individualCount', cmap='coolwarm',
+             markersize=sizes)
     plt.title(title)
     plt.show()
     plt.close()
 
 
-def decide_depth(df) -> int:
+def decide_depth(df: pd.DataFrame, random=163) -> int:
+    """
+    This function takes a mosquito DataFrame and returns the tree depth
+    that can minimize the error.
+    """
     randoms = [i for i in range(1, 30)]
     mses = []
+    # plot depth vs error
     for num in randoms:
-        mse, gdf = prediction(df, num)
+        mse, gdf = prediction(df, num, random=random)
         mses.append(mse)
     plt.plot(randoms, mses, 'ko-')
+    plt.xlabel("Random Forest Depth")
+    plt.ylabel("Mean Squared Error")
+    plt.title("Random Forest Depth vs Mean Squared Error")
     plt.show()
     plt.close()
     return randoms[mses.index(min(mses))]
@@ -432,8 +569,10 @@ def decide_depth(df) -> int:
 
 def filter_occurrence_by_30_year(occurrence: pd.DataFrame, num: str):
     """
-    Added a column in the given dataFrame that represents the (longitide, latitude) of the occurrences
-    in a given year.
+    Added a column in the given dataFrame that represents the (longitide,
+    latitude) of the occurrences in a given year.
     """
-    coordinates = zip(occurrence['decimalLongitude'], occurrence['decimalLatitude'])
-    occurrence['coordinates' + num] = [Point(lon, lat) for lon, lat in coordinates]
+    coordinates = zip(occurrence['decimalLongitude'],
+                      occurrence['decimalLatitude'])
+    occurrence['coordinates' + num] = \
+        [Point(lon, lat) for lon, lat in coordinates]
