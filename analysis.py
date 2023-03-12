@@ -38,7 +38,7 @@ import calendar
 import pandas as pd
 
 
-def main() -> None:
+def main():
     # read data
     mosquito1 = m.get_df_m(m.get_path('Aedes_aegypti_occurrence.csv'))
     mosquito2 = \
