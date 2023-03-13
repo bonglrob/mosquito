@@ -21,6 +21,11 @@ def assert_equals(expect: Any, actual: Any) -> None:
     assert expect == actual, f"Expected {expect}, but got {actual}"
 
 
+def in_column(column: Any, df: pd.DataFrame) -> None:
+    """
+    This function takes a column name and """
+
+
 def test_get_df_m(path: str) -> None:
     """
     This function tests if mosquito csv file is imported properly
@@ -28,9 +33,8 @@ def test_get_df_m(path: str) -> None:
     """
     # test type of result
     actual = m.get_df_m(path)
-    assert type(actual) == pd.DataFrame,\
-        f"Expected {pd.DataFrame}, but got {type(actual)}"
-    # test column names
+    assert_equals(pd.DataFrame, type(actual))
+    # test column name
     expect = ['species', 'countryCode', 'locality', 'stateProvince',
               'individualCount', 'decimalLatitude', 'decimalLongitude',
               'month', 'year']
@@ -41,19 +45,34 @@ def test_get_df_m(path: str) -> None:
 
 def test_generate_city_df() -> None:
     """
-    This function tests if precipitation csv file is imported and cleaned up
-    properly by generate_city_df function from mosquito.py.
+    This function tests if temperature and precipitation csv files are
+    imported and cleaned up properly by generate_city_df function
+    from mosquito.py.
     """
-    # test type of result
     actual = m.generate_city_df()
-    assert type(actual) == pd.DataFrame,\
-        f"Expected {pd.DataFrame}, but got {type(actual)}"
-    # column name
+    # test type of result
+    assert_equals(pd.DataFrame, type(actual))
+    # test column name
     assert "Temp_Eureka" in actual.columns.to_list(),\
         "A column named 'Temp_Eureka' does not exist"
     assert "Prec_Los Angeles" in actual.columns.to_list(),\
         "A column named 'Prec_Eureka' does not exist"
     print("test_test_generate_city_df passed!")
+
+
+def test_combine_pop_df() -> None:
+    """
+    This function tests if all population excel datasets are imported and
+    combined to one DataFrame by combine_pop_df funciton from mosquito.py.
+    """
+    actual = m.combine_pop_df()
+    # test type of result
+    assert_equals(pd.DataFrame, type(actual))
+    # test column name
+    assert '1947' in actual.columns.to_list(),\
+        "A column '1947' does not exist"
+    # assert '19'
+
 
 
 def main():

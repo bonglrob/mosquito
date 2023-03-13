@@ -25,7 +25,6 @@ It is not a runnable code.
 
 4. The prediction results are then plotted for each mosquito species.
 """
-
 import os
 from shapely.geometry import Point
 import pandas as pd
