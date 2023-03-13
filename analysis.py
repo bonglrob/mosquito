@@ -33,10 +33,7 @@ This code solves three questions:
 import mosquito as m
 import geopandas as gpd
 import matplotlib.pyplot as plt
-import plotly.express as px
-import calendar
 import pandas as pd
-from plotly.subplots import make_subplots
 
 
 def main():
@@ -106,77 +103,38 @@ def main():
     plt.show()
     plt.close()
 
-    # question 2 : Has there been a change of pattern for mosquitoes to thrive in certain months?
+    # question 2 :
+    # Which species occurs more in the United States?
+    # In which months are mosquitoes commonly found in the US?
+    # Is there a shift in months where mosquitoes now occur over the years?
 
-    # Copy aedes_species_occurence data
-    aedes_species = mosquito1.copy()
-    anopheles_species = mosquito2.copy()
-    culex_species = mosquito3.copy()
+    # Filter Aedes species by month from 2002 - 2022
+    aedes_species_count = m.get_count_per_month(mosquito1)
+    aedes_species_count = m.filter_years(aedes_species_count)
+    aedes_species_count = m.add_month_name(aedes_species_count)
 
-    # Groupby count per month
-    aedes_species_count = aedes_species.groupby(['year', 'month', 'species'])['individualCount'].sum().reset_index()
-    anopheles_species_count = anopheles_species.groupby(['year', 'month', 'species'])['individualCount'].sum().reset_index()
-    culex_species_count = culex_species.groupby(['year', 'month', 'species'])['individualCount'].sum().reset_index()
+    # Filter Anopheles species by month from 2002- 2022
+    anopheles_species_count = m.get_count_per_month(mosquito2)
+    anopheles_species_count = m.filter_years(anopheles_species_count)
+    anopheles_species_count = m.add_month_name(anopheles_species_count)
 
-    # Filter for 2002 - 2022:
-    is_years_2002_2022 = (aedes_species_count['year'] >= 2002) & (aedes_species_count['year'] <= 2022)
-    aedes_species_count = aedes_species_count[is_years_2002_2022]
-    is_years_2002_2022_2 = (anopheles_species_count['year'] >= 2002) & (anopheles_species_count['year'] <= 2022)
-    anopheles_species_count = anopheles_species_count[is_years_2002_2022_2]
-    is_years_2002_2022_3 = (culex_species_count['year'] >= 2002) & (culex_species_count['year'] <= 2022)
-    culex_species_count = culex_species_count[is_years_2002_2022_3]
+    # Filter Culex species by month from 2002 - 2022
+    culex_species_count = m.get_count_per_month(mosquito3)
+    culex_species_count = m.filter_years(culex_species_count)
+    culex_species_count = m.add_month_name(culex_species_count)
 
-    # Change month into readable format for plot
-    aedes_species_count['month_name'] = aedes_species_count['month'].apply(lambda x: calendar.month_name[int(x)])
-    anopheles_species_count['month_name'] = anopheles_species_count['month'].apply(lambda x: calendar.month_name[int(x)])
-    culex_species_count['month_name'] = anopheles_species_count['month'].apply(lambda x: calendar.month_name[int(x)])
+    # Merge all filtered species dataset
+    aedes_anopheles_merge_df = pd.merge(aedes_species_count,
+                                        anopheles_species_count,
+                                        how='outer')
 
-    # Merge
-    aedes_anopheles_merge_df = pd.merge(aedes_species_count, anopheles_species_count, how='outer')
-    all_species_count = pd.merge(aedes_anopheles_merge_df, culex_species_count, how='outer')
+    all_species_count = pd.merge(aedes_anopheles_merge_df,
+                                 culex_species_count,
+                                 how='outer')
 
-    fig_species = px.line(
-        all_species_count,
-        x='month',
-        y='individualCount',
-        color='species',
-        title='Monthly Count by Species',
-        labels={
-            'individualCount': 'Count',
-            'month': 'Month',
-            'species': 'Species'
-        },
-        animation_frame='year'
-    )
-
-    fig_species.update_layout(
-        yaxis=dict(range=[0, all_species_count['individualCount'].max()]),
-        updatemenus=[dict(type='buttons', showactive=False,
-                                   buttons=[dict(label='Play',
-                                                 method='animate',
-                                                 args=[None, {'frame': {'duration': 1000, 'redraw': True}, 'fromcurrent': True, 'transition': {'duration': 0}}])])]
-    )
-
-    fig_species.update_xaxes(ticktext=aedes_species_count['month_name'], tickvals=aedes_species_count['month'])
-
-    fig_aedes = px.line(
-        aedes_species_count,
-        x='month',
-        y='individualCount',
-        color='year',
-        title='Monthly Counts of Aedes Aegypti from 2002 to 2022',
-        labels={
-        'individualCount': 'Count',
-        'month': 'Month',
-        'species': 'Species',
-        'color': 'Year'
-        }
-    )
-
-    fig_aedes.update_xaxes(ticktext=aedes_species_count['month_name'], tickvals=aedes_species_count['month'])
-
-    fig_species.show()
-    fig_aedes.show()
+    # Plot both all species and aedes species count by month
+    m.plot_species(all_species_count)
+    m.plot_aedes(aedes_species_count)
 
     # question 3: Mosquito occurrence prediction
     # Aedes aegypti

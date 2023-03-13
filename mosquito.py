@@ -27,10 +27,12 @@ It is not a runnable code.
 """
 
 import os
-import pandas as pd
 from shapely.geometry import Point
+import pandas as pd
 import geopandas as gpd
 import matplotlib.pyplot as plt
+import plotly.express as px
+import calendar
 from typing import List
 from typing import Any
 from sklearn.ensemble import RandomForestRegressor
@@ -540,3 +542,87 @@ def filter_occurrence_by_30_year(occurrence: pd.DataFrame,
     occurrence['coordinates' + num] = \
         [Point(lon, lat) for lon, lat in coordinates]
     return occurrence
+
+
+def get_count_per_month(data: pd.DataFrame) -> pd.DataFrame:
+    """
+    For the given mosquito species data, return the data with a sum of
+    occurence per month for each year
+    """
+    return data.groupby(['year', 'month', 'species'])['individualCount'] \
+               .sum() \
+               .reset_index()
+
+
+def filter_years(data: pd.DataFrame) -> pd.DataFrame:
+    """
+    For the given mosquito species data, return filtered data of counts between
+    year 2002 and 2022
+    """
+    is_years_2002_2022 = (data['year'] >= 2002) & (data['year'] <= 2022)
+    return data[is_years_2002_2022]
+
+
+def add_month_name(data: pd.DataFrame) -> pd.DataFrame:
+    """
+    For given mosquito species data, return data with column of month name for
+    each corresponding number (e.g. 1 -> January) to increase readability for
+    plots
+    """
+    data['month_name'] = data['month'].apply(lambda x:
+                                             calendar.month_name[int(x)])
+    return data
+
+
+def plot_species(data: pd.DataFrame) -> None:
+    """
+    For given data on all mosquito species, opens a browser page to plot a
+    line graph of each species and their count per month for 2002.
+    The year can be adjusted up to 2022 using the slider input.
+    Each species can also be toggled on/off if you click on them in the legend
+    """
+    fig_species = px.line(
+        data,
+        x='month',
+        y='individualCount',
+        color='species',
+        title='Monthly Count of Mosquitoes in the US by Species',
+        labels={
+            'individualCount': 'Count',
+            'month': 'Month',
+            'species': 'Species'
+        },
+        animation_frame='year'
+    )
+
+    fig_species.update_layout(
+        yaxis=dict(range=[0, data['individualCount'].max()]),
+    )
+
+    fig_species.update_xaxes(ticktext=data['month_name'],
+                             tickvals=data['month'])
+
+    fig_species.show()
+
+
+def plot_aedes(data: pd.DataFrame) -> None:
+    """
+    For given data on aedes species, opens a browser page to plot a
+    line graph of their count per month of every year from 2002 t0 2022.
+    Each year can be toggled on/off by clicking on them in the legend.
+    """
+    fig_aedes = px.line(
+        data,
+        x='month',
+        y='individualCount',
+        color='year',
+        title='Monthly Counts of Aedes Aegypti from 2002 to 2022',
+        labels={
+            'individualCount': 'Count',
+            'month': 'Month',
+            'color': 'Year'
+        }
+    )
+
+    fig_aedes.update_xaxes(ticktext=data['month_name'], tickvals=data['month'])
+    fig_aedes.show()
