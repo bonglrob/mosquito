@@ -142,9 +142,9 @@ def main() -> None:
         color='species',
         title='Monthly Count by Species',
         labels={
-        'individualCount': 'Count',
-        'month': 'Month',
-        'species': 'Species'
+            'individualCount': 'Count',
+            'month': 'Month',
+            'species': 'Species'
         },
         animation_frame='year'
     )
