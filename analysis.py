@@ -33,7 +33,6 @@ This code solves three questions:
 import mosquito as m
 import geopandas as gpd
 import matplotlib.pyplot as plt
-import pandas as pd
 
 
 def main():
@@ -124,13 +123,9 @@ def main():
     culex_species_count = m.add_month_name(culex_species_count)
 
     # Merge all filtered species dataset
-    aedes_anopheles_merge_df = pd.merge(aedes_species_count,
-                                        anopheles_species_count,
-                                        how='outer')
-
-    all_species_count = pd.merge(aedes_anopheles_merge_df,
-                                 culex_species_count,
-                                 how='outer')
+    all_species_count = m.merge_all_species_data(aedes_species_count,
+                                                 anopheles_species_count,
+                                                 culex_species_count)
 
     # Plot both all species and aedes species count by month
     m.plot_species(all_species_count)
