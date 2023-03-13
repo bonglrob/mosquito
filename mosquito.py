@@ -575,8 +575,8 @@ def add_month_name(data: pd.DataFrame) -> pd.DataFrame:
 
 
 def merge_all_species_data(aedes_data: pd.DataFrame,
-                      anopheles_data: pd.DataFrame,
-                      culex_data: pd.DataFrame) -> pd.DataFrame:
+                           anopheles_data: pd.DataFrame,
+                           culex_data: pd.DataFrame) -> pd.DataFrame:
     """
     For each given mosquito species data, return the combined version of all
     monthly counts
