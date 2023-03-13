@@ -1,10 +1,10 @@
-# mosquito
+# How to run Mosquitoes Program
 ### Open with Visual Studio Code
 ### Installs
 #### In terminal:
 pip install shapely <br />
 pip install geopandas <br />
-pip install pip install plotly==5.13.1 <br />
+pip install plotly==5.13.1 <br />
 ##### If you use VSCode:
 Install Python extension (the one published by Mircosoft)
 ##### Notes for windows user:
@@ -12,7 +12,7 @@ If the above commands report errors, please switch to PyCharm
 and type in the commands again.
 ### Run analysis.py
 
-### Viewing Occurence Line Plots from plotly (for research question 2)
+### How to View Plotly Occurence Line Plots (for research question 2)
 Your default browser will open up 2 pages, each a different plot:
 1. Monthly Count of Mosquitoes in the US by Species
   - Use the bottom slider to select a year
