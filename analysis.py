@@ -48,7 +48,6 @@ def main():
     us_map = us_map[(us_map['NAME'] != 'Alaska') &
                     (us_map['NAME'] != 'Hawaii')]
 
-    1904 - 2023
     btn_04_33 = (mosquito1['year'] >= 1904) & (mosquito1['year'] <= 1933)
     btn_34_63 = (mosquito1['year'] >= 1934) & (mosquito1['year'] <= 1963)
     btn_64_93 = (mosquito1['year'] >= 1964) & (mosquito1['year'] <= 1993)
@@ -75,29 +74,29 @@ def main():
         gpd.GeoDataFrame(occurrence_04_33, geometry='coordinates1')
     occurrence_points.plot(column='coordinates1', markersize=5, ax=ax1,
                            vmin=0, vmax=1)
-    ax1.set_title('Occurrences of yellow fever mosquito in 1903-1933')
+    ax1.set_title('Occurrences of Aedes aegypti in 1903-1933')
 
     us_map.plot(color='#EEEEEE', edgecolor='#FFFFFF', ax=ax2)
     occurrence_points = gpd.GeoDataFrame(occurrence_34_63,
                                          geometry='coordinates2')
     occurrence_points.plot(column='coordinates2', markersize=5, ax=ax2,
                            vmin=0, vmax=1)
-    ax2.set_title('Occurrences of yellow fever mosquito in 1934-1963')
+    ax2.set_title('Occurrences of Aedes aegypti in 1934-1963')
 
     us_map.plot(color='#EEEEEE', edgecolor='#FFFFFF', ax=ax3)
     occurrence_points = gpd.GeoDataFrame(occurrence_64_93,
                                          geometry='coordinates3')
     occurrence_points.plot(column='coordinates3', markersize=5, ax=ax3,
                            vmin=0, vmax=1)
-    ax3.set_title('Occurrences of yellow fever mosquito in 1964-1993')
+    ax3.set_title('Occurrences of Aedes aegypti in 1964-1993')
 
     us_map.plot(color='#EEEEEE', edgecolor='#FFFFFF', ax=ax4)
     occurrence_points = gpd.GeoDataFrame(occurrence_94_23,
                                          geometry='coordinates4')
     occurrence_points.plot(column='coordinates4', markersize=5, ax=ax4,
                            vmin=0, vmax=1)
-    ax4.set_title('Occurrences of yellow fever mosquito in 1994-2023')
-    plt.savefig('Occurrence_yellow_fever.png')
+    ax4.set_title('Occurrences of Aedes aegypti in 1994-2023')
+    plt.savefig('./results/Occurrence_Aedes_aegypti.png')
 
     plt.show()
     plt.close()
@@ -138,10 +137,11 @@ def main():
     past1 = m.ca_geomosquito(mosquito1)
     data1 = m.merge_all_data(mosquito1)
     print(data1.head())
+    data1.to_csv('./results/Aedes aegypti data.csv', index=False)
     print()
 
     # Decide the depth of trees
-    min_error1 = m.decide_depth(data1)
+    min_error1 = m.decide_depth(data1, "Aedes aegypti")
 
     # TODO: edit new features if you want
     new_features1 = m.prediction(data1, min_error1, return_features=True)
@@ -180,10 +180,11 @@ def main():
     past3 = m.ca_geomosquito(mosquito3)
     data3 = m.merge_all_data(mosquito3)
     print(data3.head())
+    data3.to_csv('./results/Culex tarsalis data.csv', index=False)
     print()
 
     # Decide the depth of trees
-    min_error3 = m.decide_depth(data3, 999)
+    min_error3 = m.decide_depth(data3, "Culex tarsalis", random=999)
 
     # TODO: edit new features if you want
     new_features3 = m.prediction(data3, min_error1, return_features=True)
