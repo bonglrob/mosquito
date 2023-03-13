@@ -60,7 +60,7 @@ def to_int(x: Any) -> Any:
 
 def get_df_m(file_path: str) -> pd.DataFrame:
     """
-    This function takes a file name (str) of mosquito occurrence
+    This function takes a file path (str) of mosquito occurrence
     dataset and returns it as a DataFrame.
     """
     data = pd.read_csv(file_path, delimiter='\t', low_memory=False)
@@ -82,7 +82,7 @@ def get_df_m(file_path: str) -> pd.DataFrame:
 
 def get_df_t(file_path: str) -> pd.DataFrame:
     """
-    This function takes a file name (str) of one of temperature datasets
+    This function takes a file path (str) of temperature dataset
     and converts it to a DataFrame.
     """
     data = pd.read_csv(file_path)
@@ -94,7 +94,7 @@ def get_df_t(file_path: str) -> pd.DataFrame:
 
 def get_df_p(file_path: str) -> pd.DataFrame:
     """
-    This function takes a file name (str) of one of precipitation datasets
+    This function takes a file path (str) of one of precipitation datasets
     and converts it to a DataFrame.
     """
     data = pd.read_csv(file_path)
@@ -107,7 +107,7 @@ def get_df_p(file_path: str) -> pd.DataFrame:
 def generate_city_df() -> pd.DataFrame:
     """
     This function returns a DataFrame which combines all city tempereature
-    and precipitation datasets.
+    and precipitation DataFrames.
     """
     cities = ["Eureka", "Fresno", "Los Angeles", "Sacramento",
               "San Diego", "San Francisco"]
@@ -134,6 +134,7 @@ def generate_city_df() -> pd.DataFrame:
             result.rename(columns={"Temp": "Temp_" + city,
                                    "Prec": "Prec_" + city}, inplace=True)
     result = result.dropna()
+    result.to_csv('./results/city_data.csv', index=False)
     return result
 
 
@@ -206,6 +207,7 @@ def combine_pop_df() -> pd.DataFrame:
 
     # edit columns
     pop_all.columns = pop_all.columns.astype(str)
+    pop_all.to_csv('./results/pop_all.csv', index=False)
     return pop_all
 
 
@@ -506,11 +508,12 @@ def plot_prediction(gdf: gpd.GeoDataFrame, title: str) -> None:
     gdf.plot(ax=ax, column='individualCount', cmap='coolwarm',
              markersize=sizes)
     plt.title(title)
+    plt.savefig('./results/' + title + '.png')
     plt.show()
     plt.close()
 
 
-def decide_depth(df: pd.DataFrame, random: int = 163) -> int:
+def decide_depth(df: pd.DataFrame, mosquito: str, random: int = 163,) -> int:
     """
     This function takes a mosquito DataFrame and returns the tree depth
     that can minimize the error.
@@ -524,7 +527,8 @@ def decide_depth(df: pd.DataFrame, random: int = 163) -> int:
     plt.plot(randoms, mses, 'ko-')
     plt.xlabel("Random Forest Depth")
     plt.ylabel("Mean Squared Error")
-    plt.title("Random Forest Depth vs Mean Squared Error")
+    plt.title("Random Forest Depth vs Mean Squared Error (" + mosquito + ")")
+    plt.savefig('./results/error_' + mosquito + '.png')
     plt.show()
     plt.close()
     return randoms[mses.index(min(mses))]

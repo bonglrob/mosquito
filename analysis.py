@@ -97,7 +97,7 @@ def main():
     occurrence_points.plot(column='coordinates4', markersize=5, ax=ax4,
                            vmin=0, vmax=1)
     ax4.set_title('Occurrences of yellow fever mosquito in 1994-2023')
-    plt.savefig('Occurrence_yellow_fever.png')
+    plt.savefig('./results/Occurrence_yellow_fever.png')
 
     plt.show()
     plt.close()
@@ -140,10 +140,11 @@ def main():
     past1 = m.ca_geomosquito(mosquito1)
     data1 = m.merge_all_data(mosquito1)
     print(data1.head())
+    data1.to_csv('./results/Aedes aegypti data.csv', index=False)
     print()
 
     # Decide the depth of trees
-    min_error1 = m.decide_depth(data1)
+    min_error1 = m.decide_depth(data1, "Aedes aegypti")
 
     # TODO: edit new features if you want
     new_features1 = m.prediction(data1, min_error1, return_features=True)
@@ -182,10 +183,11 @@ def main():
     past3 = m.ca_geomosquito(mosquito3)
     data3 = m.merge_all_data(mosquito3)
     print(data3.head())
+    data3.to_csv('./results/Culex tarsalis data.csv', index=False)
     print()
 
     # Decide the depth of trees
-    min_error3 = m.decide_depth(data3, 999)
+    min_error3 = m.decide_depth(data3, "Culex tarsalis", random=999)
 
     # TODO: edit new features if you want
     new_features3 = m.prediction(data3, min_error1, return_features=True)
