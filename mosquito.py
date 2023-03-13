@@ -79,6 +79,77 @@ def get_df_m(file_path: str) -> pd.DataFrame:
     return data
 
 
+def filter_ca(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    This function takes a mosquito occurrence DataFrame and returns
+    only California data.
+    """
+    # filter rows
+    mask = df['stateProvince'] == 'California'
+    result = df[mask]
+    # if there is no occurrence in California
+    if result.empty:
+        print("No occurrence in California")
+        return None
+    else:
+        return result
+
+
+def get_geometry(mdf: pd.DataFrame) -> pd.DataFrame:
+    """
+    This functino takes mosquito dataset and converts it into GeoDataFrame.
+    """
+    if mdf is None:
+        return None
+    else:
+        # coordinates column
+        mdf = mdf.copy()
+        mdf.loc[:, 'coordinates'] = \
+            mdf.apply(lambda row: Point(row['decimalLongitude'],
+                                        row['decimalLatitude']), axis=1)
+
+        # convert it to a geopandas
+        mdf = gpd.GeoDataFrame(mdf, geometry='coordinates')
+        return mdf
+
+
+def ca_geomosquito(df: pd.DataFrame) -> gpd.GeoDataFrame:
+    """
+    This function takes a DataFrame and returns filtered GeoDataFrame
+    with California data.
+    """
+    # if DataFrame is empty
+    if df is None:
+        print("No occurrence in California")
+    else:
+        filtered = filter_ca(df)
+        result = get_geometry(filtered)
+        return result
+
+
+def get_map_ca() -> gpd.GeoDataFrame:
+    """
+    This function returns US map GeoDataFrame.
+    """
+    gdf = gpd.read_file(get_path('cb_2018_us_county_20m.shp'))
+    gdf = gdf[gdf['STATEFP'] == '06']
+    return gdf
+
+
+def ca_occurrence(mosquito: pd.DataFrame) -> gpd.GeoDataFrame:
+    # import California map
+    ca_map = get_map_ca()
+    # read occurrence dataset
+    mosquito_ca = ca_geomosquito(mosquito)
+    mosquito_ca.crs = "EPSG:4269"
+    # merge datasets
+    merged = gpd.sjoin(ca_map, mosquito_ca, how='inner',
+                       predicate='intersects')
+    columns_to_drop = ['STATEFP', 'COUNTYNS', 'AFFGEOID', 'GEOID']
+    merged = merged.drop(columns_to_drop, axis=1)
+    return merged
+
+
 def get_df_t(file_path: str) -> pd.DataFrame:
     """
     This function takes a file path (str) of temperature dataset
@@ -165,74 +236,6 @@ def pop50() -> pd.DataFrame:
     return pop4769
 
 
-def combine_pop_df() -> pd.DataFrame:
-    """
-    This funciton combines all population DataFrames and cleans it up.
-    """
-    # read files
-    pop70 = clean_up_pop_df('popca_7080.xlsx', 15, 9)
-    pop80 = clean_up_pop_df('popca_8090.xlsx', 15, 9)
-    pop90 = clean_up_pop_df('popca_9000.xlsx', 15, 9)
-    pop00 = clean_up_pop_df('popca_0010.xlsx', 20, 10)
-    pop00 = pop00.drop(pop00[pop00['Year'] == 1999].index)
-    pop10 = clean_up_pop_df('popca_1021.xlsx', 20, 10)
-    pop10 = pop10.loc[pop10['Year'] != 'Census 2010']
-    pop10['Year'] = pop10['Year'].replace('Apr-Jun 2010', 2010)
-    pop20 = clean_up_pop_df('popca_2022.xlsx', 9, 4, sheetname=1)
-    pop20 = pop20.loc[pop20['Year'] != 'Census 2020']
-    pop20['Year'] = pop20['Year'].replace('Apr-Jun 2020', 2020)
-
-    pop_50 = pop50()
-    pop_70 = change_style(pop70)
-    pop_80 = change_style(pop80)
-    pop_90 = change_style(pop90)
-    pop_00 = change_style(pop00)
-    pop_10 = change_style(pop10)
-    pop_20 = change_style(pop20)
-
-    # merge DataFrames
-    pop_all = pop_50.merge(pop_70, left_on='County', right_on='County',
-                           how='left')
-    pop_all = pop_all.merge(pop_80, left_on='County', right_on='County',
-                            how='left')
-    pop_all = pop_all.merge(pop_90, left_on='County', right_on='County',
-                            how='left')
-    pop_all = pop_all.merge(pop_00, left_on='County', right_on='County',
-                            how='left')
-    pop_all = pop_all.merge(pop_10, left_on='County', right_on='County',
-                            how='left')
-    pop_all = pop_all.merge(pop_20, left_on='County', right_on='County',
-                            how='left')
-
-    # edit columns
-    pop_all.columns = pop_all.columns.astype(str)
-    pop_all.to_csv('./results/pop_all.csv', index=False)
-    return pop_all
-
-
-def change_style(pop: pd.DataFrame) -> pd.DataFrame:
-    """
-    This function takes a population DataFrame and changes its styles so that
-    it has county name on the 1st column and years as columns name.
-    """
-    result = {}
-    result['County'] = []
-
-    for county in list(set(pop['County'])):
-        result['County'].append(county)
-        pop_copy = pop[pop['County'] == county]
-        for year in list(pop_copy['Year']):
-            year = int(year)
-            row_index = pop_copy.loc[pop_copy['Year'] == year].index[0]
-            if year not in result:
-                result[year] = [int(pop_copy.loc[row_index, 'Population'])]
-            else:
-                result[year].append(int(pop_copy.loc[row_index, 'Population']))
-
-    pop_modified = pd.DataFrame(result)
-    return pop_modified
-
-
 def column_name(df: pd.DataFrame) -> List[str]:
     """
     This takes a DataFrame and returns the DataFrame with modified column name.
@@ -286,75 +289,72 @@ def clean_up_pop_df(filename: str, start_id: int, interval: int,
     return pop_df
 
 
-def filter_ca(df: pd.DataFrame) -> pd.DataFrame:
+def change_style(pop: pd.DataFrame) -> pd.DataFrame:
     """
-    This function takes a mosquito occurrence DataFrame and returns
-    only California data.
+    This function takes a population DataFrame and changes its styles so that
+    it has county name on the 1st column and years as columns name.
     """
-    # filter rows
-    mask = df['stateProvince'] == 'California'
-    result = df[mask]
-    # if there is no occurrence in California
-    if result.empty:
-        print("No occurrence in California")
-        return None
-    else:
-        return result
+    result = {}
+    result['County'] = []
+
+    for county in list(set(pop['County'])):
+        result['County'].append(county)
+        pop_copy = pop[pop['County'] == county]
+        for year in list(pop_copy['Year']):
+            year = int(year)
+            row_index = pop_copy.loc[pop_copy['Year'] == year].index[0]
+            if year not in result:
+                result[year] = [int(pop_copy.loc[row_index, 'Population'])]
+            else:
+                result[year].append(int(pop_copy.loc[row_index, 'Population']))
+
+    pop_modified = pd.DataFrame(result)
+    return pop_modified
 
 
-def get_geometry(mdf: pd.DataFrame) -> pd.DataFrame:
+def combine_pop_df() -> pd.DataFrame:
     """
-    This functino takes mosquito dataset and converts it into GeoDataFrame.
+    This funciton combines all population DataFrames and cleans it up.
     """
-    if mdf is None:
-        return None
-    else:
-        # coordinates column
-        mdf = mdf.copy()
-        mdf.loc[:, 'coordinates'] = \
-            mdf.apply(lambda row: Point(row['decimalLongitude'],
-                                        row['decimalLatitude']), axis=1)
+    # read files
+    pop70 = clean_up_pop_df('popca_7080.xlsx', 15, 9)
+    pop80 = clean_up_pop_df('popca_8090.xlsx', 15, 9)
+    pop90 = clean_up_pop_df('popca_9000.xlsx', 15, 9)
+    pop00 = clean_up_pop_df('popca_0010.xlsx', 20, 10)
+    pop00 = pop00.drop(pop00[pop00['Year'] == 1999].index)
+    pop10 = clean_up_pop_df('popca_1021.xlsx', 20, 10)
+    pop10 = pop10.loc[pop10['Year'] != 'Census 2010']
+    pop10['Year'] = pop10['Year'].replace('Apr-Jun 2010', 2010)
+    pop20 = clean_up_pop_df('popca_2022.xlsx', 9, 4, sheetname=1)
+    pop20 = pop20.loc[pop20['Year'] != 'Census 2020']
+    pop20['Year'] = pop20['Year'].replace('Apr-Jun 2020', 2020)
 
-        # convert it to a geopandas
-        mdf = gpd.GeoDataFrame(mdf, geometry='coordinates')
-        return mdf
+    pop_50 = pop50()
+    pop_70 = change_style(pop70)
+    pop_80 = change_style(pop80)
+    pop_90 = change_style(pop90)
+    pop_00 = change_style(pop00)
+    pop_10 = change_style(pop10)
+    pop_20 = change_style(pop20)
 
+    # merge DataFrames
+    pop_all = pop_50.merge(pop_70, left_on='County', right_on='County',
+                           how='left')
+    pop_all = pop_all.merge(pop_80, left_on='County', right_on='County',
+                            how='left')
+    pop_all = pop_all.merge(pop_90, left_on='County', right_on='County',
+                            how='left')
+    pop_all = pop_all.merge(pop_00, left_on='County', right_on='County',
+                            how='left')
+    pop_all = pop_all.merge(pop_10, left_on='County', right_on='County',
+                            how='left')
+    pop_all = pop_all.merge(pop_20, left_on='County', right_on='County',
+                            how='left')
 
-def get_map_ca() -> gpd.GeoDataFrame:
-    """
-    This function returns US map GeoDataFrame.
-    """
-    gdf = gpd.read_file(get_path('cb_2018_us_county_20m.shp'))
-    gdf = gdf[gdf['STATEFP'] == '06']
-    return gdf
-
-
-def ca_geomosquito(df: pd.DataFrame) -> gpd.GeoDataFrame:
-    """
-    This function takes a DataFrame and returns filtered GeoDataFrame
-    with California data.
-    """
-    # if DataFrame is empty
-    if df is None:
-        print("No occurrence in California")
-    else:
-        filtered = filter_ca(df)
-        result = get_geometry(filtered)
-        return result
-
-
-def ca_occurrence(mosquito: pd.DataFrame) -> gpd.GeoDataFrame:
-    # import California map
-    ca_map = get_map_ca()
-    # read occurrence dataset
-    mosquito_ca = ca_geomosquito(mosquito)
-    mosquito_ca.crs = "EPSG:4269"
-    # merge datasets
-    merged = gpd.sjoin(ca_map, mosquito_ca, how='inner',
-                       predicate='intersects')
-    columns_to_drop = ['STATEFP', 'COUNTYNS', 'AFFGEOID', 'GEOID']
-    merged = merged.drop(columns_to_drop, axis=1)
-    return merged
+    # edit columns
+    pop_all.columns = pop_all.columns.astype(str)
+    pop_all.to_csv('./results/pop_all.csv', index=False)
+    return pop_all
 
 
 def get_capital(county: str) -> str:
@@ -457,20 +457,20 @@ def prediction(data: gpd.GeoDataFrame, depth: Any = None,
         return features
     labels = data[['decimalLongitude', 'decimalLatitude', 'individualCount']]
 
-    # split the data into training and testing sets
+    # split data into training and testing datasets
     feature_train, feature_test, label_train, label_test = \
         train_test_split(features, labels, test_size=0.2, random_state=random)
 
-    # create a Random Forest regressor model
+    # creaate a Random Forest regressor model
     rf = RandomForestRegressor(n_estimators=depth, random_state=random)
 
     # train the model
     rf.fit(feature_train, label_train)
 
-    # make predictions on the testing set
+    # predict on testing set
     y_pred = rf.predict(feature_test)
 
-    # calculate the mean squared error
+    # compute the mean squared error
     mse = mean_squared_error(label_test, y_pred)
 
     # create a new GeoDataFrame with the predicted longitude and latitude
@@ -493,25 +493,6 @@ def prediction(data: gpd.GeoDataFrame, depth: Any = None,
     return mse, predictions_gdf
 
 
-def plot_prediction(gdf: gpd.GeoDataFrame, title: str) -> None:
-    """
-    This function takes a GeoDataFrame of mosquito occurence and plots it
-    on a California map.
-    """
-    fig, ax = plt.subplots(1)
-    # plot a CA map
-    ca_map = get_map_ca()
-    ca_map.plot(ax=ax, color='#EEEEEE', edgecolor='#FFFFFF')
-    # plot the predicted points on a map
-    sizes = gdf['individualCount']
-    gdf.plot(ax=ax, column='individualCount', cmap='coolwarm',
-             markersize=sizes)
-    plt.title(title)
-    plt.savefig('./results/' + title + '.png')
-    plt.show()
-    plt.close()
-
-
 def decide_depth(df: pd.DataFrame, mosquito: str, random: int = 163,) -> int:
     """
     This function takes a mosquito DataFrame and returns the tree depth
@@ -531,6 +512,25 @@ def decide_depth(df: pd.DataFrame, mosquito: str, random: int = 163,) -> int:
     plt.show()
     plt.close()
     return randoms[mses.index(min(mses))]
+
+
+def plot_prediction(gdf: gpd.GeoDataFrame, title: str) -> None:
+    """
+    This function takes a GeoDataFrame of mosquito occurence and plots it
+    on a California map.
+    """
+    fig, ax = plt.subplots(1)
+    # plot a CA map
+    ca_map = get_map_ca()
+    ca_map.plot(ax=ax, color='#EEEEEE', edgecolor='#FFFFFF')
+    # plot the predicted points on a map
+    sizes = gdf['individualCount']
+    gdf.plot(ax=ax, column='individualCount', cmap='coolwarm',
+             markersize=sizes)
+    plt.title(title)
+    plt.savefig('./results/' + title + '.png')
+    plt.show()
+    plt.close()
 
 
 def filter_occurrence_by_30_year(occurrence: pd.DataFrame,
