@@ -36,6 +36,7 @@ import matplotlib.pyplot as plt
 import plotly.express as px
 import calendar
 import pandas as pd
+from plotly.subplots import make_subplots
 
 
 def main() -> None:
@@ -134,7 +135,7 @@ def main() -> None:
     aedes_anopheles_merge_df = pd.merge(aedes_species_count, anopheles_species_count, how='outer')
     all_species_count = pd.merge(aedes_anopheles_merge_df, culex_species_count, how='outer')
 
-    fig1 = px.line(
+    fig_species = px.line(
         all_species_count,
         x='month',
         y='individualCount',
@@ -148,7 +149,7 @@ def main() -> None:
         animation_frame='year'
     )
 
-    fig1.update_layout(
+    fig_species.update_layout(
         yaxis=dict(range=[0, all_species_count['individualCount'].max()]),
         updatemenus=[dict(type='buttons', showactive=False,
                                    buttons=[dict(label='Play',
@@ -156,9 +157,26 @@ def main() -> None:
                                                  args=[None, {'frame': {'duration': 1000, 'redraw': True}, 'fromcurrent': True, 'transition': {'duration': 0}}])])]
     )
 
-    fig1.update_xaxes(ticktext=aedes_species_count['month_name'], tickvals=aedes_species_count['month'])
+    fig_species.update_xaxes(ticktext=aedes_species_count['month_name'], tickvals=aedes_species_count['month'])
 
-    fig1.show()
+    fig_aedes = px.line(
+        aedes_species_count,
+        x='month',
+        y='individualCount',
+        color='year',
+        title='Monthly Counts of Aedes Aegypti from 2002 to 2022',
+        labels={
+        'individualCount': 'Count',
+        'month': 'Month',
+        'species': 'Species',
+        'color': 'Year'
+        }
+    )
+
+    fig_aedes.update_xaxes(ticktext=aedes_species_count['month_name'], tickvals=aedes_species_count['month'])
+
+    fig_species.show()
+    fig_aedes.show()
 
     # question 3: Mosquito occurrence prediction
     # Aedes aegypti
