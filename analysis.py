@@ -104,8 +104,6 @@ def main():
 
     # question 2 :
     # Which species occurs more in the United States?
-    # In which months are mosquitoes commonly found in the US?
-    # Is there a shift in months where mosquitoes now occur over the years?
 
     # Filter Aedes species by month from 2002 - 2022
     aedes_species_count = m.get_count_per_month(mosquito1)
