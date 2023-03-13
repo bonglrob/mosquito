@@ -242,7 +242,7 @@ def column_name(df: pd.DataFrame) -> List[str]:
 
 
 def clean_up_pop_df(filename: str, start_id: int, interval: int,
-                    sheetname=None):
+                    sheetname: Any = None):
     """
     This function takes 1970-2022 population dataset and cleans up the dataset
     so that is has columns 'County', 'Year', and 'Population'.
@@ -437,8 +437,9 @@ def merge_all_data(mosquito: pd.DataFrame) -> gpd.GeoDataFrame:
     return occurrence
 
 
-def prediction(data: gpd.GeoDataFrame, depth=None, new_prediction=False,
-               new_features=None, random=163, return_features=False) -> Any:
+def prediction(data: gpd.GeoDataFrame, depth: Any = None,
+               new_prediction: bool = False, new_features: Any = None,
+               random: int = 163, return_features: bool = False) -> Any:
     """
     This function takes a GeoDataFrame with mosquito occurrence, population,
     temperature, precipitation etc., for each county in California,
@@ -507,7 +508,7 @@ def plot_prediction(gdf: gpd.GeoDataFrame, title: str) -> None:
     plt.close()
 
 
-def decide_depth(df: pd.DataFrame, random=163) -> int:
+def decide_depth(df: pd.DataFrame, random: int = 163) -> int:
     """
     This function takes a mosquito DataFrame and returns the tree depth
     that can minimize the error.
@@ -527,7 +528,8 @@ def decide_depth(df: pd.DataFrame, random=163) -> int:
     return randoms[mses.index(min(mses))]
 
 
-def filter_occurrence_by_30_year(occurrence: pd.DataFrame, num: str):
+def filter_occurrence_by_30_year(occurrence: pd.DataFrame,
+                                 num: str) -> gpd.GeoDataFrame:
     """
     Added a column in the given dataFrame that represents the (longitide,
     latitude) of the occurrences in a given year.

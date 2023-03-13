@@ -39,7 +39,7 @@ import pandas as pd
 from plotly.subplots import make_subplots
 
 
-def main() -> None:
+def main():
     # read data
     mosquito1 = m.get_df_m(m.get_path('Aedes_aegypti_occurrence.csv'))
     mosquito2 = \
@@ -209,7 +209,7 @@ def main() -> None:
     title1 = "Aedes aegypti occurrence in California by prediction " + \
         "on test datasets"
     m.plot_prediction(prediction1, title1)
-    title2 = "Aedes aegypti occurrence in California in September 2050"
+    title2 = "Aedes aegypti occurrence prediction in California"
     m.plot_prediction(new1, title2)
     print()
 
@@ -252,7 +252,7 @@ def main() -> None:
     title3 = "Culex tarsalis occurrence in California by prediction" + \
         "on test datasets"
     m.plot_prediction(prediction3, title3)
-    title4 = "Culex tarsalis occurrence in California in September 2050"
+    title4 = "Culex tarsalis occurrence prediction in California"
     m.plot_prediction(new3, title4)
 
 
