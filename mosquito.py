@@ -534,7 +534,7 @@ def decide_depth(df: pd.DataFrame, mosquito: str, random: int = 163,) -> int:
 
 
 def filter_occurrence_by_30_year(occurrence: pd.DataFrame,
-                                 num: str) -> gpd.GeoDataFrame:
+                                 num: str) -> pd.DataFrame:
     """
     Added a column in the given dataFrame that represents the (longitide,
     latitude) of the occurrences in a given year.
