@@ -5,7 +5,7 @@ Install Python extension (published by Mircosoft)
 #### In terminal:
 pip install shapely <br />
 pip install geopandas
-##### Notes or windows user
-if the above commands do not work for you, please
-switch to PyCharm and type in the commands again.
+##### Notes for windows user:
+if the above commands report errors, please switch to PyCharm
+and type in the commands again.
 ### Run analysis.py
