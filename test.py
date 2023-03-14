@@ -23,7 +23,12 @@ def assert_equals(expect: Any, actual: Any) -> None:
 
 def in_column(column: Any, df: pd.DataFrame) -> None:
     """
-    This function takes a column name and """
+    This function takes a column name and a DataFrame
+    and checks if the column is in the DataFrame.
+    """
+    columns = df.columns.to_list()
+    assert column in columns,\
+        
 
 
 def test_get_df_m(path: str) -> None:

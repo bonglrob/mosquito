@@ -22,3 +22,7 @@ Your default browser will open up 2 pages, each a different plot:
   - Select any year in the legend key to toggle them on and off to focus on years of interest
 
 You can hover any datapoint to view exact number of occurences for that month
+
+### Other files
+* mosquito.py: This file implements functions used in analysis.py.
+* test.py: This file implements test functions for mosquito.py.
