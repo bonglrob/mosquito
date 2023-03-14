@@ -79,7 +79,7 @@ def get_df_m(file_path: str) -> pd.DataFrame:
     return data
 
 
-def filter_ca(df: pd.DataFrame) -> pd.DataFrame:
+def filter_ca(df: pd.DataFrame) -> pd.DataFrame | None:
     """
     This function takes a mosquito occurrence DataFrame and returns
     only California data.
@@ -95,7 +95,7 @@ def filter_ca(df: pd.DataFrame) -> pd.DataFrame:
         return result
 
 
-def get_geometry(mdf: pd.DataFrame) -> pd.DataFrame:
+def get_geometry(mdf: pd.DataFrame) -> pd.DataFrame | None:
     """
     This functino takes mosquito dataset and converts it into GeoDataFrame.
     """
@@ -294,8 +294,7 @@ def change_style(pop: pd.DataFrame) -> pd.DataFrame:
     This function takes a population DataFrame and changes its styles so that
     it has county name on the 1st column and years as columns name.
     """
-    result = {}
-    result['County'] = []
+    result = {'County': []}
 
     for county in list(set(pop['County'])):
         result['County'].append(county)
