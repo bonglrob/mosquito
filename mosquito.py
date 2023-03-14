@@ -97,7 +97,7 @@ def filter_ca(df: pd.DataFrame) -> pd.DataFrame | None:
 
 def get_geometry(mdf: pd.DataFrame) -> pd.DataFrame | None:
     """
-    This functino takes mosquito dataset and converts it into GeoDataFrame.
+    This function takes mosquito dataset and converts it into GeoDataFrame.
     """
     if mdf is None:
         return None

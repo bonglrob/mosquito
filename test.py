@@ -82,9 +82,9 @@ def test_get_count_per_month(data: pd.DataFrame) -> pd.DataFrame:
     culex_count = m.get_count_per_month(data)
     is_year_2018 = culex_count['year'] == 2018
     is_month_july = culex_count['month'] == 7
-    count = culex_count[is_year_2018 & is_month_july]['individualCount']
+    culex_count = culex_count[is_year_2018 & is_month_july]['individualCount']
 
-    assert_equals(200568, count)
+    assert_equals(200568, culex_count.item())
 
 
 def main():
