@@ -79,7 +79,8 @@ def get_df_m(file_path: str) -> pd.DataFrame:
     return data
 
 
-def filter_ca(df: pd.DataFrame) -> pd.DataFrame | None:
+def filter_ca(df: pd.DataFrame) -> pd.DataFrame or None:
+    # "|" caused a flake8 issue
     """
     This function takes a mosquito occurrence DataFrame and returns
     only California data.
@@ -95,7 +96,8 @@ def filter_ca(df: pd.DataFrame) -> pd.DataFrame | None:
         return result
 
 
-def get_geometry(mdf: pd.DataFrame) -> pd.DataFrame | None:
+def get_geometry(mdf: pd.DataFrame) -> pd.DataFrame or None:
+    # "|" caused a flake8 issue
     """
     This function takes mosquito dataset and converts it into GeoDataFrame.
     """
@@ -397,7 +399,7 @@ def add_0(num: float) -> str:
     return result
 
 
-def merge_all_data(mosquito: pd.DataFrame) -> gpd.GeoDataFrame:
+def merge_all_data(mosquito: pd.DataFrame) -> pd.DataFrame:
     """
     This function takes mosquito occurrence Dataframe and merges it
     with population, temperature, precipitation datasets.
@@ -439,7 +441,7 @@ def merge_all_data(mosquito: pd.DataFrame) -> gpd.GeoDataFrame:
     return occurrence
 
 
-def prediction(data: gpd.GeoDataFrame, depth: Any = None,
+def prediction(data: gpd.GeoDataFrame, depth: int = 5,
                new_prediction: bool = False, new_features: Any = None,
                random: int = 163, return_features: bool = False) -> Any:
     """
@@ -492,7 +494,7 @@ def prediction(data: gpd.GeoDataFrame, depth: Any = None,
     return mse, predictions_gdf
 
 
-def decide_depth(df: pd.DataFrame, mosquito: str, random: int = 163,) -> int:
+def decide_depth(df: pd.DataFrame, mosquito: str, random: int = 163) -> int:
     """
     This function takes a mosquito DataFrame and returns the tree depth
     that can minimize the error.
