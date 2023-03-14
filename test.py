@@ -74,6 +74,18 @@ def test_combine_pop_df() -> None:
     # assert '19'
 
 
+def test_get_count_per_month(data: pd.DataFrame) -> pd.DataFrame:
+    """
+    Tests get_count_per_month to make sure it is accurately returning a
+    DataFrame with all the correct monthly count values
+    """
+    culex_count = m.get_count_per_month(data)
+    is_year_2018 = culex_count['year'] == 2018
+    is_month_july = culex_count['month'] == 7
+    count = culex_count[is_year_2018 & is_month_july]['individualCount']
+
+    assert_equals(200568, count)
+
 
 def main():
     path1 = m.get_path('Aedes_aegypti_occurrence.csv')
@@ -83,6 +95,7 @@ def main():
     test_get_df_m(path2)
     test_get_df_m(path3)
     test_generate_city_df()
+    test_get_count_per_month(m.get_df_m(path3))
     print("all tests passed!")
 
 
